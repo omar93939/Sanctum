@@ -122,14 +122,10 @@ app.get('/login/google', async (req, res) => {
   let connection;
   try {
     const response = await googleAuthClient.getToken(req.query.code);
-    console.log(response);
     const ticket = await googleAuthClient.verifyIdToken({idToken: response.tokens.id_token!, audience: clientInfo.google.id});
-    console.log(ticket);
     const payload = ticket.getPayload();
-    console.log(payload);
     if (!(payload?.email_verified)) return res.redirect(`/?loginErr=401`);
     const googleID = ticket.getUserId();
-    console.log(googleID);
     connection = await db.getConnection();
     await connection.beginTransaction();
     const [user] = await connection.execute('SELECT userid, googleid, email, accounttype, displayname, pp, pv FROM users WHERE googleid = ? OR email = ? ORDER BY googleid IS NULL ASC LIMIT 1 FOR UPDATE', [googleID, payload.email]);
@@ -161,7 +157,7 @@ app.get('/login/google', async (req, res) => {
     } else {
       // GoogleID not found in Database - User was invited but this is their first login
       await connection.execute('UPDATE users SET googleid = ?, accounttype = ?, lastlogin = CURDATE() WHERE userid = ? LIMIT 1', [googleID, 1, user.userid]);
-      return mailer.sendGoogleAccountRegistrationEmail(payload.email!, payload.given_name).catch(err => {
+      mailer.sendGoogleAccountRegistrationEmail(payload.email!, payload.given_name).catch(err => {
         return console.error('Failed to send Google Account Registration Email: ', err);
       });
     }
@@ -195,7 +191,6 @@ app.get('/login/google', async (req, res) => {
     if (error instanceof URIError) {
       return res.redirect("/?loginErr=400");
     }
-    console.error(error);
     return res.redirect(`/?loginErr=500`);
   } finally {
     await connection?.release();
