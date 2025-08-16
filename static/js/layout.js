@@ -31,19 +31,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   previewImages();
 
-  if (document.getElementById("logout-button")) {
-    document.getElementById("logout-button").addEventListener("click", (event) => {
-      event.preventDefault();
-      fetch(`/logout`, {
-        method: "GET"
-      }).then(_ => {
-        window.location.reload();
-      }).catch(_ => {
-        window.alert("Error logging out");
-      });
-    });
-  }
-
 });
 
 const previewImages = () => {

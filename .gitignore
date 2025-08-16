@@ -41,5 +41,5 @@ lerna-debug.log*
 /pm2.config.cjs
 
 #Auth Secrets
-/auth/*
-/uploads/*
+/auth/
+/uploads/

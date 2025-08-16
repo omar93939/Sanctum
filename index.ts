@@ -118,15 +118,18 @@ app.get('/', (req, res) => {
 
 // TODO: Whitelist using db
 app.get('/login/google', async (req, res) => {
-  const state = req.query.state || '/';
   if (typeof req.query.code !== 'string') return res.redirect(`/?loginErr=400`);
   let connection;
   try {
     const response = await googleAuthClient.getToken(req.query.code);
+    console.log(response);
     const ticket = await googleAuthClient.verifyIdToken({idToken: response.tokens.id_token!, audience: clientInfo.google.id});
+    console.log(ticket);
     const payload = ticket.getPayload();
+    console.log(payload);
     if (!(payload?.email_verified)) return res.redirect(`/?loginErr=401`);
     const googleID = ticket.getUserId();
+    console.log(googleID);
     connection = await db.getConnection();
     await connection.beginTransaction();
     const [user] = await connection.execute('SELECT userid, googleid, email, accounttype, displayname, pp, pv FROM users WHERE googleid = ? OR email = ? ORDER BY googleid IS NULL ASC LIMIT 1 FOR UPDATE', [googleID, payload.email]);
@@ -245,6 +248,15 @@ app.put('/register/oauth', upload.single('img'), async (req, res) => {
   } finally {
     await connection?.release();
   }
+});
+
+app.get('/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).send('Internal server error');
+    res.clearCookie('pp');
+    res.clearCookie('basicInfo');
+    return res.redirect('/');
+  });
 });
 
 // TODO: Make dom sign off on this - i.e., set flag instead of deleting fully.
