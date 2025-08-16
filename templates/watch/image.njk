@@ -3,7 +3,7 @@
 {% block head %}
   <title>{{ video.title }} | Sanctum</title>
   <meta name="description" content="Watch {{ video.title }} on Sanctum. If you're looking for {{ video.displayname or video.username }} videos, you'll find them here!">
-  <link rel="stylesheet" href="/css/min/watch.css?v=1.2">
+  <link rel="stylesheet" href="/css/min/watch.css?v=1.3">
   <link rel="canonical" href="https://sanctum.{{ DOMAIN }}/watch?v={{ videouid }}">
   <script type="application/ld+json">
     {
@@ -199,6 +199,6 @@
       </div>
     </div>
   </div>
-  <script src="/js/min/watch.js?v=1.4"></script>
+  <script src="/js/min/watch.js?v=1.5"></script>
 
 {% endblock %}
