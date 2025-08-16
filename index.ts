@@ -343,128 +343,128 @@ app.get('/edit/:videouid', async (req, res) => {
   }
 });
 
-app.post('/upload/image', upload.single('image'), async (req, res) => {
-  if (!req.session.authorized) return res.status(401).send('Unauthorized');
-  if (req.session.type! < 4) return res.status(403).send('Forbidden');
-  try {
-    const orientation = parseInt(req.body.orientation);
-    const visibility = parseInt(req.body.visibility);
-    const event = parseInt(req.body.event);
-    if (!req.body.title || !req.body.tags) return res.status(400).send('Bad request');
-    if (req.body.title.length < 5 || req.body.title.length > 100) return res.status(400).send('Bad request');
-    if (orientation < 0 || orientation > 5) return res.status(400).send('Bad request');
-    if (visibility < 0 || visibility > 1) return res.status(400).send('Bad request');
-    if (event < 0 || event > 11) return res.status(400).send('Bad request');
-    if (!Array.isArray(req.body.tags)) return res.status(400).send('Bad request');
-    if (req.body.tags.length < 2 || req.body.tags.length > 16) return res.status(400).send('Bad request');
-    const tags = req.body.tags.join();
-    if (tags.length < 7 || tags.length > 339) return res.status(400).send('Bad request');
-    if (!req.file) {
-      if (!req.body.id || req.body.id.length !== 33) return res.status(400).send('Bad request');
-      await db.execute('UPDATE images SET Title = ?, Orientation = ?, Visibility = ?, Event = ?, Tags = ? WHERE imageuid = ? AND userid = ?', [req.body.title, orientation, visibility, event, tags.toLowerCase(), req.body.id, req.session.userid]);
-      return res.redirect(`/profile/${req.session.username}/gallery`);
-    } else {
-      if (req.session.userid === 1) {
-        const image = sharp(req.file!.buffer).resize(3840, 3840, {fit: sharp.fit.inside, withoutEnlargement: true}).webp({quality: 90});
-        const [imageData, imageBuffer] = await Promise.all([
-          image.metadata(),
-          image.toBuffer()
-        ]);
-        const imageHash = `${base64UUID()}`;
-        // await bunnyStorage.upload(imageBuffer, `${chat_streamstorage}/img/${imageHash}.webp`);
-        await db.execute('INSERT INTO images (ImageUID, UserID, Username, Filename, Width, Height, Title, OriginalTitle, Orientation, Visibility, Event, Tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [imageHash, req.session.userid, req.session.username, req.file!.originalname, imageData.width, imageData.height, req.body.title, req.body.title, orientation, visibility, event, tags.toLowerCase()]);
-        return res.redirect('/profile/' + req.session.username + '/gallery');
-      } else {
-        const preview = sharp(req.file!.buffer).resize(400, 400, {fit: sharp.fit.inside, withoutEnlargement: true}).blur(30).webp();
-        const image = sharp(req.file!.buffer).resize(3840, 3840, {fit: sharp.fit.inside, withoutEnlargement: true}).webp({quality: 90});
-        const [previewBuffer, imageData, imageBuffer] = await Promise.all([
-          preview.toBuffer(),
-          image.metadata(),
-          image.toBuffer()
-        ]);
-        const imageHash = `${base64UUID()}`;
-        await Promise.all([
-          // bunnyStorage.upload(previewBuffer, `${chat_streamstorage}/img/${previewHash}.webp`),
-          // bunnyStorage.upload(imageBuffer, `${chat_streamstorage}/img/${imageHash}.webp`)
-        ]);
-        await db.execute('INSERT INTO images (ImageUID, BlurredUID, UserID, Username, Filename, Width, Height, Title, OriginalTitle, Orientation, Visibility, Event, Tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [imageHash, req.session.userid, req.session.username, req.file!.originalname, imageData.width, imageData.height, req.body.title, req.body.title, orientation, visibility, event, tags.toLowerCase()]);
-        return res.redirect('/profile/' + req.session.username + '/gallery');
-      }
-    }
-  } catch (error) {
-    return res.status(500).send('Internal server error.');
-  }
-});
-app.post('/upload/video', upload.single('video'), async (req, res) => {
-  if (!req.session.authorized) return res.status(401).send('Unauthorized.');
-  if (req.session.type! < 2) return res.status(403).send('Forbidden.');
-  if (req.body.type == "video") {
-    if (!(UUID_PATTERN.test(req.body.id)) || !req.body.title || !(typeof req.body.titleLanguage === 'number') || !(typeof req.body.orientation === 'number') || !(typeof req.body.spokenLanguage === 'number') || !(typeof req.body.visibility === 'number') || !(typeof req.body.production === 'number') || !req.body.categories || !req.body.tags) {
-      return res.status(400).send('Bad request');
-    }
-    if (req.body.title.length < 5 || req.body.title.length > 100) return res.status(400).send('Bad request');
-    if (req.body.titleLanguage < 0 || req.body.titleLanguage > 13) return res.status(400).send('Bad request');
-    if (req.body.orientation < 0 || req.body.orientation > 5) return res.status(400).send('Bad request');
-    if (req.body.spokenLanguage < 0 || req.body.spokenLanguage > 36) return res.status(400).send('Bad request');
-    if (req.body.visibility < 0 || req.body.visibility > 1) return res.status(400).send('Bad request');
-    if (req.body.production < 0 || req.body.production > 1) return res.status(400).send('Bad request');
-    if (!Array.isArray(req.body.tags) || !Array.isArray(req.body.categories)) return res.status(400).send('Bad request');
-    if (req.body.categories.length < 1 || req.body.categories.length > 12) return res.status(400).send('Bad request');
-    if (req.body.tags.length < 2 || req.body.tags.length > 16) return res.status(400).send('Bad request');
-    let connection;
-    try {
-      connection = await db.getConnection();
-      await connection.beginTransaction();
-      const result = await connection.execute('SELECT VideoID, userid, originaltitle FROM videos WHERE videouid = ? LIMIT 1 FOR UPDATE', [req.body.id]);
-      if (!result.length) {
-        await connection.rollback();
-        return res.status(400).send('Bad request');
-      }
-      if (result[0].userid != req.session.userid && req.session.type! < 99) {
-        await connection.rollback();
-        return res.status(403).send('Forbidden');
-      }
-      let categoryValues: Array<[number, number]>;
-      let tagValues: Array<[number, string]>;
-      try {
-        tagValues = req.body.tags.map((tag: string) => {
-          if (tag.length < 2 || tag.length > 20) {
-            throw new Error('Bad request');
-          }
-          return [result[0].VideoID, tag.toLowerCase()];  
-        });
-      } catch {
-        return res.status(400).send('Bad request');
-      }
-      if (result[0].originaltitle === null) {
-        await Promise.all([
-          connection.batch('INSERT INTO videotags (VideoID, Tag) VALUES (?, ?)', tagValues),
-          connection.execute('UPDATE videos SET Modified = CURRENT_TIMESTAMP, OriginalTitle = ?, Title = ?, TitleLanguage = ?, Orientation = ?, SpokenLanguage = ?, Visibility = ?, Production = ? WHERE VideoID = ? LIMIT 1', [req.body.title, req.body.title, req.body.titleLanguage, req.body.orientation, req.body.spokenLanguage, req.body.visibility, req.body.production, result[0].VideoID])
-        ]);
-      } else {
-        await Promise.all([
-          connection.execute('DELETE FROM videocategories WHERE VideoID = ?', [result[0].VideoID]),
-          connection.execute('DELETE FROM videotags WHERE VideoID = ?', [result[0].VideoID])
-        ]);
-        await Promise.all([
-          connection.batch('INSERT INTO videotags (VideoID, Tag) VALUES (?, ?)', tagValues),
-          connection.execute('UPDATE videos SET Modified = CURRENT_TIMESTAMP, Title = ?, TitleLanguage = ?, Orientation = ?, SpokenLanguage = ?, Visibility = ?, Production = ? WHERE VideoID = ? LIMIT 1', [req.body.title, req.body.titleLanguage, req.body.orientation, req.body.spokenLanguage, req.body.visibility, req.body.production, result[0].VideoID]),
-        ])
-      }
-      await connection.commit();
-      return res.redirect('/profile');
-    } catch (error) {
-      await connection?.rollback();
-      return res.status(500).send('Internal server error.');
-    } finally {
-      await connection?.release();
-    }
-  } else if (req.body.type == "image") {
-    return res.status(400).send('Bad request');
-  } else {
-    return res.status(400).send('Bad request');
-  }
-});
+// app.post('/upload/image', upload.single('image'), async (req, res) => {
+//   if (!req.session.authorized) return res.status(401).send('Unauthorized');
+//   if (req.session.type! < 4) return res.status(403).send('Forbidden');
+//   try {
+//     const orientation = parseInt(req.body.orientation);
+//     const visibility = parseInt(req.body.visibility);
+//     const event = parseInt(req.body.event);
+//     if (!req.body.title || !req.body.tags) return res.status(400).send('Bad request');
+//     if (req.body.title.length < 5 || req.body.title.length > 100) return res.status(400).send('Bad request');
+//     if (orientation < 0 || orientation > 5) return res.status(400).send('Bad request');
+//     if (visibility < 0 || visibility > 1) return res.status(400).send('Bad request');
+//     if (event < 0 || event > 11) return res.status(400).send('Bad request');
+//     if (!Array.isArray(req.body.tags)) return res.status(400).send('Bad request');
+//     if (req.body.tags.length < 2 || req.body.tags.length > 16) return res.status(400).send('Bad request');
+//     const tags = req.body.tags.join();
+//     if (tags.length < 7 || tags.length > 339) return res.status(400).send('Bad request');
+//     if (!req.file) {
+//       if (!req.body.id || req.body.id.length !== 33) return res.status(400).send('Bad request');
+//       await db.execute('UPDATE images SET Title = ?, Orientation = ?, Visibility = ?, Event = ?, Tags = ? WHERE imageuid = ? AND userid = ?', [req.body.title, orientation, visibility, event, tags.toLowerCase(), req.body.id, req.session.userid]);
+//       return res.redirect(`/profile/${req.session.displayname}/gallery`);
+//     } else {
+//       if (req.session.userid === 1) {
+//         const image = sharp(req.file!.buffer).resize(3840, 3840, {fit: sharp.fit.inside, withoutEnlargement: true}).webp({quality: 90});
+//         const [imageData, imageBuffer] = await Promise.all([
+//           image.metadata(),
+//           image.toBuffer()
+//         ]);
+//         const imageHash = `${base64UUID()}`;
+//         // await bunnyStorage.upload(imageBuffer, `${chat_streamstorage}/img/${imageHash}.webp`);
+//         await db.execute('INSERT INTO images (ImageUID, UserID, Username, Filename, Width, Height, Title, OriginalTitle, Orientation, Visibility, Event, Tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [imageHash, req.session.userid, req.session.username, req.file!.originalname, imageData.width, imageData.height, req.body.title, req.body.title, orientation, visibility, event, tags.toLowerCase()]);
+//         return res.redirect('/profile/' + req.session.username + '/gallery');
+//       } else {
+//         const preview = sharp(req.file!.buffer).resize(400, 400, {fit: sharp.fit.inside, withoutEnlargement: true}).blur(30).webp();
+//         const image = sharp(req.file!.buffer).resize(3840, 3840, {fit: sharp.fit.inside, withoutEnlargement: true}).webp({quality: 90});
+//         const [previewBuffer, imageData, imageBuffer] = await Promise.all([
+//           preview.toBuffer(),
+//           image.metadata(),
+//           image.toBuffer()
+//         ]);
+//         const imageHash = `${base64UUID()}`;
+//         await Promise.all([
+//           // bunnyStorage.upload(previewBuffer, `${chat_streamstorage}/img/${previewHash}.webp`),
+//           // bunnyStorage.upload(imageBuffer, `${chat_streamstorage}/img/${imageHash}.webp`)
+//         ]);
+//         await db.execute('INSERT INTO images (ImageUID, BlurredUID, UserID, Username, Filename, Width, Height, Title, OriginalTitle, Orientation, Visibility, Event, Tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [imageHash, req.session.userid, req.session.username, req.file!.originalname, imageData.width, imageData.height, req.body.title, req.body.title, orientation, visibility, event, tags.toLowerCase()]);
+//         return res.redirect('/profile/' + req.session.username + '/gallery');
+//       }
+//     }
+//   } catch (error) {
+//     return res.status(500).send('Internal server error.');
+//   }
+// });
+// app.post('/upload/video', upload.single('video'), async (req, res) => {
+//   if (!req.session.authorized) return res.status(401).send('Unauthorized.');
+//   if (req.session.type! < 2) return res.status(403).send('Forbidden.');
+//   if (req.body.type == "video") {
+//     if (!(UUID_PATTERN.test(req.body.id)) || !req.body.title || !(typeof req.body.titleLanguage === 'number') || !(typeof req.body.orientation === 'number') || !(typeof req.body.spokenLanguage === 'number') || !(typeof req.body.visibility === 'number') || !(typeof req.body.production === 'number') || !req.body.categories || !req.body.tags) {
+//       return res.status(400).send('Bad request');
+//     }
+//     if (req.body.title.length < 5 || req.body.title.length > 100) return res.status(400).send('Bad request');
+//     if (req.body.titleLanguage < 0 || req.body.titleLanguage > 13) return res.status(400).send('Bad request');
+//     if (req.body.orientation < 0 || req.body.orientation > 5) return res.status(400).send('Bad request');
+//     if (req.body.spokenLanguage < 0 || req.body.spokenLanguage > 36) return res.status(400).send('Bad request');
+//     if (req.body.visibility < 0 || req.body.visibility > 1) return res.status(400).send('Bad request');
+//     if (req.body.production < 0 || req.body.production > 1) return res.status(400).send('Bad request');
+//     if (!Array.isArray(req.body.tags) || !Array.isArray(req.body.categories)) return res.status(400).send('Bad request');
+//     if (req.body.categories.length < 1 || req.body.categories.length > 12) return res.status(400).send('Bad request');
+//     if (req.body.tags.length < 2 || req.body.tags.length > 16) return res.status(400).send('Bad request');
+//     let connection;
+//     try {
+//       connection = await db.getConnection();
+//       await connection.beginTransaction();
+//       const result = await connection.execute('SELECT VideoID, userid, originaltitle FROM videos WHERE videouid = ? LIMIT 1 FOR UPDATE', [req.body.id]);
+//       if (!result.length) {
+//         await connection.rollback();
+//         return res.status(400).send('Bad request');
+//       }
+//       if (result[0].userid != req.session.userid && req.session.type! < 99) {
+//         await connection.rollback();
+//         return res.status(403).send('Forbidden');
+//       }
+//       let categoryValues: Array<[number, number]>;
+//       let tagValues: Array<[number, string]>;
+//       try {
+//         tagValues = req.body.tags.map((tag: string) => {
+//           if (tag.length < 2 || tag.length > 20) {
+//             throw new Error('Bad request');
+//           }
+//           return [result[0].VideoID, tag.toLowerCase()];  
+//         });
+//       } catch {
+//         return res.status(400).send('Bad request');
+//       }
+//       if (result[0].originaltitle === null) {
+//         await Promise.all([
+//           connection.batch('INSERT INTO videotags (VideoID, Tag) VALUES (?, ?)', tagValues),
+//           connection.execute('UPDATE videos SET Modified = CURRENT_TIMESTAMP, OriginalTitle = ?, Title = ?, TitleLanguage = ?, Orientation = ?, SpokenLanguage = ?, Visibility = ?, Production = ? WHERE VideoID = ? LIMIT 1', [req.body.title, req.body.title, req.body.titleLanguage, req.body.orientation, req.body.spokenLanguage, req.body.visibility, req.body.production, result[0].VideoID])
+//         ]);
+//       } else {
+//         await Promise.all([
+//           connection.execute('DELETE FROM videocategories WHERE VideoID = ?', [result[0].VideoID]),
+//           connection.execute('DELETE FROM videotags WHERE VideoID = ?', [result[0].VideoID])
+//         ]);
+//         await Promise.all([
+//           connection.batch('INSERT INTO videotags (VideoID, Tag) VALUES (?, ?)', tagValues),
+//           connection.execute('UPDATE videos SET Modified = CURRENT_TIMESTAMP, Title = ?, TitleLanguage = ?, Orientation = ?, SpokenLanguage = ?, Visibility = ?, Production = ? WHERE VideoID = ? LIMIT 1', [req.body.title, req.body.titleLanguage, req.body.orientation, req.body.spokenLanguage, req.body.visibility, req.body.production, result[0].VideoID]),
+//         ])
+//       }
+//       await connection.commit();
+//       return res.redirect('/profile');
+//     } catch (error) {
+//       await connection?.rollback();
+//       return res.status(500).send('Internal server error.');
+//     } finally {
+//       await connection?.release();
+//     }
+//   } else if (req.body.type == "image") {
+//     return res.status(400).send('Bad request');
+//   } else {
+//     return res.status(400).send('Bad request');
+//   }
+// });
 
 app.get('/upload', (req, res) => {
   if (!req.session.authorized) return res.status(401).render('redirect/error/401.njk', { session: req.session, cookies: req.cookies });
@@ -485,7 +485,7 @@ app.get('/upload/:type', (req, res) => {
 });
 
 app.get('/profile', (req, res) => {
-  if (req.session.authorized) return res.redirect(`/profile/${req.session.username}/videos`);
+  if (req.session.authorized) return res.redirect(`/profile/${req.session.displayname}/videos`);
   // TODO: Send to Login/Registration page
   return res.redirect('/');
 });
@@ -884,7 +884,7 @@ app.get('/profile/:username/videos', async (req, res) => {
 // TODO: Combine below (deduplicate code, DRY)
 app.post('/profile/:username/:subroute/:action', upload.single('image'), async (req, res) => {
   if (!req.session.authorized) return res.status(401).send('Unauthorized');
-  if (req.params.username !== req.session.username) return res.status(403).send('Forbidden');
+  if (req.params.username !== req.session.displayname) return res.status(403).send('Forbidden');
   if (req.params.subroute !== 'edit') return res.status(404).send('Path not found');
   if (req.params.action === 'avatar') {
     if (!req.file) return res.status(400).send('Bad request');
@@ -894,7 +894,7 @@ app.post('/profile/:username/:subroute/:action', upload.single('image'), async (
       await connection.beginTransaction();
       const [data, [result]] = await Promise.all([
         sharp(req.file.buffer).resize(200, 200).webp({quality: 85}).toBuffer(),
-        connection.execute('SELECT userid, pv FROM users WHERE username = ? FOR UPDATE', [req.session.username])
+        connection.execute('SELECT userid, pv FROM users WHERE username = ? FOR UPDATE', [req.session.displayname])
       ]);
       const hash = base64UUID();
       // await Promise.all([
@@ -903,7 +903,7 @@ app.post('/profile/:username/:subroute/:action', upload.single('image'), async (
       // ]);
       await connection.commit();
       res.cookie("pp", `https://cdn.${DOMAIN}/sanctum/pp/${hash}.webp`);
-      res.status(303).redirect(`/profile/${req.session.username}/edit`);
+      res.status(303).redirect(`/profile/${req.session.displayname}/edit`);
       // if (result.pv) {
       //   bunnyStorage.delete(`pp/${result.pv}.webp`).catch((err) => {
       //     console.log(`Profile banner deletion error for pv: ${result.pv} `, err);
@@ -924,7 +924,7 @@ app.post('/profile/:username/:subroute/:action', upload.single('image'), async (
       await connection.beginTransaction();
       const [data, [result]] = await Promise.all([
         sharp(req.file.buffer).resize(1500, 300).webp({quality: 85}).toBuffer(),
-        connection.execute('SELECT userid, bv FROM users WHERE username = ? FOR UPDATE', [req.session.username])
+        connection.execute('SELECT userid, bv FROM users WHERE username = ? FOR UPDATE', [req.session.displayname])
       ]);
       const hash = base64UUID();
       // await Promise.all([
@@ -932,7 +932,7 @@ app.post('/profile/:username/:subroute/:action', upload.single('image'), async (
       //   connection.execute('UPDATE users SET bv = ? WHERE userid = ?', [hash, result.userid])
       // ]);
       await connection.commit();
-      res.status(303).redirect(`/profile/${req.session.username}/edit`);
+      res.status(303).redirect(`/profile/${req.session.displayname}/edit`);
       // if (result.bv) {
       //   bunnyStorage.delete(`pb/${result.bv}.webp`).catch((err) => {
       //     console.log(`Profile banner deletion error for bv: ${result.bv} `, err);
