@@ -17,7 +17,12 @@
       margin-top: 20px;
       font-size: 1.5em;
     }
-    #signup-username, #signup-name {
+    h3 {
+      margin-top: 10px;
+      font-size: 1em;
+      color: #ababb3;
+    }
+    #signup-username {
       width: 100%;
       max-width: 300px;
       margin: 10px;
@@ -118,21 +123,20 @@
       e.preventDefault();
       const username = document.getElementById('signup-username').value;
       if (!username) {
-        document.getElementById('error').innerText = 'Username is required';
+        document.getElementById('error').innerText = 'Displayname is required';
         return;
-      } else if (username.length < 6 || username.length > 18) {
-        document.getElementById('error').innerText = 'Username must be between 6 and 18 characters';
+      } else if (username.length < 1 || username.length > 40) {
+        document.getElementById('error').innerText = 'Displayname must be between 6 and 40 characters';
         return;
-      } else if (!username.match(/^[a-zA-Z0-9]+$/)) {
-        document.getElementById('error').innerText = 'Username must only contain letters and numbers';
+      } else if (!username.match(/^[a-zA-Z0-9 ]+$/)) {
+        document.getElementById('error').innerText = 'Displayname must only contain letters, numbers and spaces';
         return;
       }
       const submitButton = document.getElementById('submit-registration');
       submitButton.disabled = true;
       submitButton.innerText = 'Saving...';
       const data = {
-        username: username,
-        name: document.getElementById('signup-name').value
+        displayname: document.getElementById('signup-name').value
       }
       fetch('/register/oauth', {
         method: 'POST',
@@ -181,8 +185,9 @@
 
 <form data-next="{{ next }}" id="complete-registration" autocomplete="off" onsubmit="event.preventDefault()">
   <h1>Complete Registration</h1>
-  <h2>Choose a Username</h2>
-  <input id="signup-username" class="signup-field" type="text" placeholder="Username (required)" autocomplete="off">
+  <h2>Choose a Displayname</h2>
+  <h3>Displayname does NOT need to be unique.</h3>
+  <input id="signup-username" class="signup-field" type="text" placeholder="Displayname (required)" autocomplete="off" value="{{ name }}">
   {% if picture %}
     <h2>Profile Picture (optional)</h2>
     <div id="thumbnail" onclick="this.firstElementChild.click()">
@@ -191,10 +196,6 @@
       <img src="{{ cookies.pp or '/images/DefaultPP250p.jpg' }}" width="150px" height="150px" alt="Profile Picture">
     </div>
     <button type="button" data-picture="{{ picture }}" id="download-picture" onclick="downloadPicture(this.dataset.picture)">Download from {{ source }}</button>
-  {% endif %}
-  {% if name %}
-    <h2>Name (optional)</h2>
-    <input id="signup-name" class="signup-field" type="text" placeholder="Name (optional)" value="{{ name }}">
   {% endif %}
   <button id="submit-registration" type="submit" onclick="submitRegistration(event)">Submit</button>
   <div id="error"></div>

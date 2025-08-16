@@ -76,9 +76,9 @@ env.addGlobal('STREAM_HOSTNAME', STREAM_HOSTNAME);
 
 declare module 'express-session' {
   export interface SessionData {
-    userid: number;
+    userid: string;
     authorized: boolean;
-    username: string;
+    displayname: string;
     type: number;
   }
 }
@@ -114,6 +114,134 @@ app.get('/', (req, res) => {
   if (!req.session.authorized) return res.render('login.njk');
   // TODO
   return res.render('index.njk', { session: req.session, cookies: req.cookies });
+});
+
+// TODO: Whitelist using db
+app.get('/login/google', async (req, res) => {
+  const state = req.query.state || '/';
+  if (typeof req.query.code !== 'string') return res.redirect(`/?loginErr=400`);
+  let connection;
+  try {
+    const response = await googleAuthClient.getToken(req.query.code);
+    const ticket = await googleAuthClient.verifyIdToken({idToken: response.tokens.id_token!, audience: clientInfo.google.id});
+    const payload = ticket.getPayload();
+    if (!(payload?.email_verified)) return res.redirect(`/?loginErr=401`);
+    const googleID = ticket.getUserId();
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    const [user] = await connection.execute('SELECT userid, googleid, email, accounttype, displayname, pp, pv FROM users WHERE googleid = ? OR email = ? ORDER BY googleid IS NULL ASC LIMIT 1 FOR UPDATE', [googleID, payload.email]);
+    if (!user) return res.redirect(`/?loginErr=403`);
+    const accountType = user.accounttype || 1;
+    if (user.googleid) {
+      // GoogleID is found in Database - User has logged in before
+      if (user.email !== payload.email) {
+        // User changed their email. Check if new email is in database.
+        // If email is not in database, change email to new email.
+        // If email is in database, check if the email owner has logged in before.
+        // If the email was logged into before, send conflict error and inform the user to contact support on front-end.
+        // If email was not logged into (invited but not logged in), delete account associated with email from database and change email to new email.
+        const [result] = await connection.execute('SELECT userid, accounttype FROM users WHERE email = ? LIMIT 1 FOR UPDATE', [payload.email]);
+        if (result) {
+          if (result.accounttype === 0) {
+            await connection.execute('DELETE FROM users WHERE userid = ? LIMIT 1', [result.userid]);
+            await connection.execute('UPDATE users SET email = ?, lastlogin = CURDATE() WHERE userid = ? LIMIT 1', [payload.email, user.userid]);
+          } else {
+            await connection.rollback();
+            return res.redirect(`/?loginErr=409`);
+          }
+        } else {
+          await connection.execute('UPDATE users SET email = ?, lastlogin = CURDATE() WHERE userid = ? LIMIT 1', [payload.email, user.userid]);
+        }
+      } else {
+        await connection.execute('UPDATE users SET lastlogin = CURDATE() WHERE userid = ? LIMIT 1', [user.userid]);
+      }
+    } else {
+      // GoogleID not found in Database - User was invited but this is their first login
+      await connection.execute('UPDATE users SET googleid = ?, accounttype = ?, lastlogin = CURDATE() WHERE userid = ? LIMIT 1', [googleID, 1, user.userid]);
+      return mailer.sendGoogleAccountRegistrationEmail(payload.email!, payload.given_name).catch(err => {
+        return console.error('Failed to send Google Account Registration Email: ', err);
+      });
+    }
+    if (user.displayname) {
+      // Login
+      req.session.userid = user.userid;
+      req.session.displayname = user.displayname;
+      req.session.type = accountType;
+      req.session.authorized = true;
+      // 30 Days (30 * 24 * 60 * 60 * 1000)
+      req.session.cookie.maxAge = 2592000000;
+      if (user.pv) {
+        res.cookie("pp", `https://cdn.${DOMAIN}/sanctum/pp/${user.pv}.webp`);
+      } else if (user.pp) {
+        res.cookie("pp", `https://cdn.${DOMAIN}/sanctum/pp/${user.pp}.webp`);
+      } else {
+        res.cookie("pp", "/images/DefaultPP250p.jpg");
+      }
+      await connection.commit();
+      return res.redirect('/');
+    } else {
+      // Commence Registration
+      req.session.userid = user.userid;
+      req.session.type = accountType;
+      res.cookie("pp", "/images/DefaultPP250p.jpg");
+      await connection.commit();
+      return res.redirect(`/register/google?picture=${payload.picture}&name=${payload.given_name}`);
+    }
+  } catch (error) {
+    await connection?.rollback();
+    if (error instanceof URIError) {
+      return res.redirect("/?loginErr=400");
+    }
+    return res.redirect(`/?loginErr=500`);
+  } finally {
+    await connection?.release();
+  }
+});
+app.get('/register/google', (req, res) => {
+  if (!req.session.userid) return res.status(401).render('redirect/error/401.njk', { session: req.session, cookies: req.cookies });
+  if (req.session.authorized) return res.status(403).render('redirect/error/403.njk', { session: req.session, cookies: req.cookies });
+  res.render('register.njk', { session: req.session, cookies: req.cookies, picture: req.query.picture, name: req.query.name, source: "Google" });
+});
+
+app.post('/register/oauth', async (req, res) => {
+  if (!req.session.userid) return res.status(401).send('Unauthorized');
+  if (req.session.authorized) return res.status(403).send('Forbidden');
+  if (!req.body.displayname || typeof req.body.displayname !== 'string') return res.status(400).send('Displayname format error');
+  if (req.body.username.length < 1 || req.body.username.length > 40) return res.status(400).send('Displayname must be between 6 and 18 characters long');
+  if (!req.body.username.match(/^[a-zA-Z0-9 ]+$/)) return res.status(400).send('Displayname must be alphanumeric');
+  try {
+    await db.execute('UPDATE users SET displayname = ? WHERE userid = ?', [req.body.displayname, req.session.userid]);
+    req.session.displayname = req.body.displayname;
+    req.session.authorized = true;
+    return res.status(200).send();
+  } catch (error) {
+    return res.status(500).send('Internal server error');
+  }
+});
+app.put('/register/oauth', upload.single('img'), async (req, res) => {
+  if (!req.session.authorized) return res.status(401).send('Unauthorized');
+  if (!req.file) return res.status(400).send('No file uploaded');
+  let connection;
+  try {
+    const data = await sharp(req.file.buffer).resize(400, 400, { withoutEnlargement: true }).webp({quality: 90}).toBuffer();
+    const hash = base64UUID();
+    await bunnyStorage.upload(data, `pp/${hash}.webp`);
+    connection = await db.getConnection();
+    await connection.beginTransaction();
+    const [user] = await connection.execute('SELECT pv FROM users WHERE userid = ? LIMIT 1 FOR UPDATE', [req.session.userid]);
+    await connection.execute('UPDATE users SET pv = ? WHERE userid = ?', [hash, req.session.userid]);
+    await connection.commit();
+    res.cookie("pp", `https://sanctum.${DOMAIN}/pp/${hash}.webp`);
+    if (user && user.pv) {
+      bunnyStorage.delete(`pp/${user.pv}.webp`).catch(err => {console.error('Failed bunnyStorage deletion: ', err)});
+    }
+    return res.status(200).send();
+  } catch (error) {
+    await connection?.rollback();
+    return res.status(500).send('Internal server error');
+  } finally {
+    await connection?.release();
+  }
 });
 
 // TODO: Make dom sign off on this - i.e., set flag instead of deleting fully.
@@ -353,183 +481,6 @@ app.get('/upload/:type', (req, res) => {
     res.render('upload/image.njk', { session: req.session, cookies: req.cookies });
   } else {
     res.render('upload/video.njk', { session: req.session, cookies: req.cookies });
-  }
-});
-
-// TODO: Whitelist using db
-app.get('/login/google', async (req, res) => {
-  const state = req.query.state || '/';
-  if (typeof state !== 'string') return res.redirect("/?loginErr=400");
-  if (typeof req.query.code !== 'string') return res.redirect(`${decodeURIComponent(state)}?loginErr=400`);
-  let connection;
-  try {
-    const response = await googleAuthClient.getToken(req.query.code);
-    const ticket = await googleAuthClient.verifyIdToken({idToken: response.tokens.id_token!, audience: clientInfo.google.id});
-    const payload = ticket.getPayload();
-    if (!(payload?.email_verified)) return res.redirect(`${decodeURIComponent(state)}?loginErr=400`);
-    const googleID = ticket.getUserId();
-    connection = await db.getConnection();
-    await connection.beginTransaction();
-    const result = await connection.execute('SELECT userid, googleid, paidtokens, promotokens, accounttype, email, username, pp, pv FROM users WHERE googleid = ? OR email = ? ORDER BY googleid IS NULL ASC LIMIT 1 FOR UPDATE', [googleID, payload.email]);
-    if (result.length) {
-      // GoogleID or Email is found in Database
-      const newAccounttype = result[0].accounttype || 1;
-      let about;
-      if (result[0].googleid) {
-        // GoogleID is found in Database
-        if (result[0].username) {
-          // User has completed SignUp
-          if (result[0].email !== payload.email) {
-            // Email mismatch between database and Google's systems
-            const result2 = await connection.execute('SELECT userid, accounttype FROM users WHERE email = ? LIMIT 1 FOR UPDATE', [payload.email]);
-            if (result2.length) {
-              // Google Email is already found in Database - Handle based on whether account in question is already Email verified
-              if (result2[0].accounttype) {
-                // Google Email is already linked to a user with their Email Verified - Send back conflict error - this will tell them to contact support on front-end
-                await connection.rollback();
-                return res.redirect(`${decodeURIComponent(state)}?loginErr=409`);
-              } else {
-                // Google Email linked to a user without verified Email - Google verification counts as Email verification - Can safely replace Email
-                [about] = await Promise.all([
-                  connection.execute('UPDATE users SET accounttype = ?, email = ?, lastlogin = CURDATE() WHERE userid = ?', [newAccounttype, payload.email, result[0].userid]),
-                  connection.execute('UPDATE users SET email = NULL WHERE userid = ?', [result2[0].userid])
-                ]);
-              }
-            } else {
-              // Google Email was not found in Database - can safely replace Email in database
-              [about] = await Promise.all([
-                connection.execute('UPDATE users SET accounttype = ?, email = ?, lastlogin = CURDATE() WHERE userid = ? LIMIT 1', [newAccounttype, payload.email, result[0].userid])
-              ]);
-            }
-            mailer.sendGoogleAccountChangeMailEmail(payload.email!, result[0].username).catch(err => {
-              return console.error('Failed to send Google Account Change Mail Email: ', err);
-            });
-          } else {
-            // Simply log the User in
-            [about] = await Promise.all([
-              connection.execute('UPDATE users SET lastlogin = CURDATE() WHERE userid = ? LIMIT 1', [result[0].userid])
-            ]);
-          }
-        } else {
-          // Re-engage Registration process
-          req.session.userid = result[0].userid;
-          res.cookie("pp", "/images/DefaultPP250p.jpg");
-          await connection.rollback();
-          return res.redirect(`/register/google?next=${req.query.state}&picture=${payload.picture}&name=${payload.given_name}`);
-        }
-      } else {
-        // Email found in Database but no GoogleID - Merge GoogleID into User. If account is not already Email verified, automatically verify Email
-        [about] = await Promise.all([
-          connection.execute('UPDATE users SET googleid = ?, accounttype = ?, lastlogin = CURDATE() WHERE userid = ? LIMIT 1', [googleID, newAccounttype, result[0].userid])
-        ]);
-      }
-      req.session.username = result[0].username;
-      req.session.userid = result[0].userid;
-      req.session.type = newAccounttype;
-      req.session.authorized = true;
-      // 30 Days
-      req.session.cookie.maxAge = 2592000000;
-      if (result[0].pp) {
-        res.cookie("pp", `https://cdn.${DOMAIN}/sanctum/pp/${result[0].pp}.webp`);
-      } else if (result[0].pv) {
-        res.cookie("pp", `https://cdn.${DOMAIN}/sanctum/pp/${result[0].pv}.webp`);
-      } else {
-        res.cookie("pp", "/images/DefaultPP250p.jpg");
-      }
-      await connection.commit();
-      return res.redirect(decodeURIComponent(state));
-    } else {
-      // GoogleID nor Email not found in Database - Initialise Registration
-      const result = await connection.execute('INSERT INTO users (googleid, accounttype, email, lastlogin) VALUES (?, 1, ?, CURDATE()) RETURNING userid, paidtokens, promotokens', [googleID, payload.email]);
-      await connection.execute('INSERT INTO about (userid) VALUES (?)', [result[0].userid]);
-      req.session.userid = result[0].userid;
-      res.cookie("pp", "/images/DefaultPP250p.jpg");
-      await connection.commit();
-      res.redirect(`/register/google?next=${req.query.state}&picture=${payload.picture}&name=${payload.given_name}`);
-      return mailer.sendGoogleAccountRegistrationEmail(payload.email!, payload.given_name).catch(err => {
-        return console.error('Failed to send Google Account Registration Email: ', err);
-      });
-    }
-  } catch (error) {
-    await connection?.rollback();
-    if (error instanceof URIError) {
-      return res.redirect("/?loginErr=400");
-    }
-    return res.redirect(`${decodeURIComponent(state)}?loginErr=500`);
-  } finally {
-    await connection?.release();
-  }
-});
-app.get('/register/google', (req, res) => {
-  if (!req.session.userid) return res.status(401).render('redirect/error/401.njk', { session: req.session, cookies: req.cookies });
-  if (req.session.authorized) return res.status(403).render('redirect/error/403.njk', { session: req.session, cookies: req.cookies });
-  res.render('register.njk', { session: req.session, cookies: req.cookies, picture: req.query.picture, name: req.query.name, username: req.query.username, source: "Google", next: req.query.next });
-});
-
-app.post('/register/oauth', async (req, res) => {
-  if (!req.session.userid) return res.status(401).send('Unauthorized');
-  if (req.session.authorized) return res.status(403).send('Forbidden');
-  if (!req.body.username || typeof req.body.username !== 'string') return res.status(400).send('Username error');
-  if (req.body.username.length < 6 || req.body.username.length > 18) return res.status(400).send('Username must be between 6 and 18 characters long');
-  if (!req.body.username.match(/^[a-zA-Z0-9]+$/)) return res.status(400).send('Username must be alphanumeric');
-  if (req.body.name) {
-    if (typeof req.body.name !== 'string' || req.body.name.length > 40) return res.status(400).send('Name must be at most 40 characters long');
-    let connection;
-    try {
-      connection = await db.getConnection();
-      await connection.beginTransaction();
-      await Promise.all([
-        connection.execute('UPDATE users SET username = ? WHERE userid = ?', [req.body.username, req.session.userid]),
-        connection.execute('UPDATE about SET name = ? WHERE userid = ?', [req.body.name, req.session.userid])
-      ]);
-      req.session.username = req.body.username;
-      req.session.authorized = true;
-      // 30 Days
-      req.session.cookie.maxAge = 2592000000;
-      await connection.commit();
-      return res.status(200).send();
-    } catch (error) {
-      await connection?.rollback();
-      return res.status(500).send('Internal server error');
-    } finally {
-      await connection?.release();
-    }
-  } else {
-    try {
-      await db.execute('UPDATE users SET username = ? WHERE userid = ?', [req.body.username, req.session.userid]);
-      req.session.username = req.body.username;
-      req.session.authorized = true;
-      // 30 Days
-      req.session.cookie.maxAge = 2592000000;
-      return res.status(200).send();
-    } catch (error) {
-      return res.status(500).send('Internal server error');
-    }
-  }
-});
-app.put('/register/oauth', upload.single('img'), async (req, res) => {
-  if (!req.session.authorized) return res.status(401).send('Unauthorized');
-  if (!req.file) return res.status(400).send('No file uploaded');
-  let connection;
-  try {
-    const data = await sharp(req.file.buffer).resize(200, 200).webp().toBuffer();
-    const hash = base64UUID();
-    // await bunnyStorage.upload(data, `pp/${hash}.webp`);
-    connection = await db.getConnection();
-    await connection.beginTransaction();
-    const result = await connection.execute('SELECT pv FROM users WHERE userid = ? LIMIT 1 FOR UPDATE', [req.session.userid]);
-    await connection.execute('UPDATE users SET pv = ? WHERE userid = ?', [hash, req.session.userid]);
-    await connection.commit();
-    res.cookie("pp", `https://cdn.${DOMAIN}/sanctum/pp/${hash}.webp`);
-    if (result[0].pv) {
-      // bunnyStorage.delete(`pp/${result[0].pv}.webp`).catch(err => {console.error('Failed bunnyStorage deletion: ', err)});
-    }
-    return res.status(200).send();
-  } catch (error) {
-    await connection?.rollback();
-    return res.status(500).send('Internal server error');
-  } finally {
-    await connection?.release();
   }
 });
 

@@ -10,7 +10,7 @@
 {% block main %}
   <div id="sign-box-wrapper">
     <div class="body-sign-box">
-      <button class="gsi-material-button" type="button" onclick="window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=483973556799-6ato33qi2qa06gtm14v5mpe9j42cf9vl.apps.googleusercontent.com&redirect_uri=https://sanctum.{{ DOMAIN }}/login/google&response_type=code&scope=email%20profile%20openid&state=${encodeURIComponent(window.location.href)}`">
+      <button class="gsi-material-button" type="button" onclick="window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?client_id=483973556799-6ato33qi2qa06gtm14v5mpe9j42cf9vl.apps.googleusercontent.com&redirect_uri=https://sanctum.{{ DOMAIN }}/login/google&response_type=code&scope=email%20profile%20openid'">
         <div class="gsi-material-button-state"></div>
         <div class="gsi-material-button-content-wrapper">
           <div class="gsi-material-button-icon">
