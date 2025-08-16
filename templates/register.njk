@@ -135,7 +135,7 @@
       submitButton.disabled = true;
       submitButton.innerText = 'Saving...';
       const data = {
-        displayname: document.getElementById('signup-name').value
+        displayname: document.getElementById('signup-username').value
       }
       fetch('/register/oauth', {
         method: 'POST',
