@@ -178,7 +178,7 @@ async function updateVersionInTemplates(sourceWebPath, minifiedWebPath, template
 
         // 1. First, try to find and update any LEGACY paths to the NEW path format.
         content = content.replace(sourceRegex, (match, version) => {
-            const newVersion = 1(parseFloat(version) + 0.1).toFixed(1);
+            const newVersion = (parseFloat(version) + 0.1).toFixed(1);
             console.log(`     - [Legacy Path] Found in ${basename(file)}. Updating to new path and version v${newVersion}.`);
             return `${minifiedWebPath}?v=${newVersion}`;
         });
