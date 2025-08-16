@@ -198,8 +198,8 @@ app.get('/login/google', async (req, res) => {
   }
 });
 app.get('/register/google', (req, res) => {
-  if (!req.session.userid) return res.status(401).render('redirect/error/401.njk', { session: req.session, cookies: req.cookies });
-  if (req.session.authorized) return res.status(403).render('redirect/error/403.njk', { session: req.session, cookies: req.cookies });
+  if (!req.session.userid) return res.status(401).render('error/401.njk', { session: req.session, cookies: req.cookies });
+  if (req.session.authorized) return res.status(403).render('error/403.njk', { session: req.session, cookies: req.cookies });
   res.render('register.njk', { session: req.session, cookies: req.cookies, picture: req.query.picture, name: req.query.name, source: "Google" });
 });
 
@@ -467,14 +467,14 @@ app.get('/edit/:videouid', async (req, res) => {
 // });
 
 app.get('/upload', (req, res) => {
-  if (!req.session.authorized) return res.status(401).render('redirect/error/401.njk', { session: req.session, cookies: req.cookies });
-  if (req.session.type! < 2) return res.status(403).render('redirect/error/403.njk', { session: req.session, cookies: req.cookies });
+  if (!req.session.authorized) return res.status(401).render('error/401.njk', { session: req.session, cookies: req.cookies });
+  if (req.session.type! < 2) return res.status(403).render('error/403.njk', { session: req.session, cookies: req.cookies });
   return res.render('upload/image.njk', { session: req.session, cookies: req.cookies })
 });
 
 app.get('/upload/:type', (req, res) => {
-  if (!req.session.authorized) return res.status(401).render('redirect/error/401.njk', { session: req.session, cookies: req.cookies });
-  if (req.session.type! < 2) return res.status(403).render('redirect/error/403.njk', { session: req.session, cookies: req.cookies });
+  if (!req.session.authorized) return res.status(401).render('error/401.njk', { session: req.session, cookies: req.cookies });
+  if (req.session.type! < 2) return res.status(403).render('error/403.njk', { session: req.session, cookies: req.cookies });
   if (req.params.type === 'video') {
     res.render('upload/video.njk', { session: req.session, cookies: req.cookies });
   } else if (req.params.type === 'image') {
@@ -490,7 +490,7 @@ app.get('/profile', (req, res) => {
   return res.redirect('/');
 });
 app.get('/profile/:username', (req, res) => {
-  if (!req.params.username) return res.status(400).render('redirect/error/400.njk', { session: req.session, cookies: req.cookies });
+  if (!req.params.username) return res.status(400).render('error/400.njk', { session: req.session, cookies: req.cookies });
   // TODO: Maybe remove this later when implementing user profiles. Also make sure to check for Displayname if removing below.
   return res.redirect('/profile/' + req.params.username + '/videos');
   // db.query('SELECT userid, username, pp, pb FROM users WHERE username = ? LIMIT 1', [req.params.username], (err, result: RowDataPacket[]) => {
@@ -538,7 +538,7 @@ app.get('/profile/:username', (req, res) => {
 
 
 app.get('/watch', async (req, res) => {
-  if (!req.query.v || typeof req.query.v !== 'string' || !UUID_PATTERN.test(req.query.v)) return res.status(400).render('redirect/error/400.njk', { session: req.session, cookies: req.cookies });
+  if (!req.query.v || typeof req.query.v !== 'string' || !UUID_PATTERN.test(req.query.v)) return res.status(400).render('error/400.njk', { session: req.session, cookies: req.cookies });
   try {
     const query = `
       SELECT
@@ -548,13 +548,13 @@ app.get('/watch', async (req, res) => {
         FROM videos AS v INNER JOIN users AS u ON v.userid = u.userid LEFT JOIN videocategories AS vc ON v.videoid = vc.videoid
       WHERE v.videouid = ? GROUP BY v.videoid`;
     const [video] = await db.execute(query, [req.query.v]);
-    if (!video) return res.status(404).render('redirect/error/404.njk', { session: req.session, cookies: req.cookies });
+    if (!video) return res.status(404).render('error/404.njk', { session: req.session, cookies: req.cookies });
     res.setHeader('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate');
     const videoid = video.videoid;
-    if (!video.processed) return res.status(404).render('redirect/error/404.njk', { session: req.session, cookies: req.cookies });
+    if (!video.processed) return res.status(404).render('error/404.njk', { session: req.session, cookies: req.cookies });
     if (!video.verified || video.visibility === 1) {
-      if (!req.session.authorized) return res.status(401).render('redirect/error/401.njk', { session: req.session, cookies: req.cookies });
-      if (req.session.userid !== video.userid && req.session.type! < 99) return res.status(403).render('redirect/error/403.njk', { session: req.session, cookies: req.cookies });
+      if (!req.session.authorized) return res.status(401).render('error/401.njk', { session: req.session, cookies: req.cookies });
+      if (req.session.userid !== video.userid && req.session.type! < 99) return res.status(403).render('error/403.njk', { session: req.session, cookies: req.cookies });
     }
     const duration = `PT${Math.floor(video.duration / 60)}M${video.duration % 60}S`;
     video.datetimeago = formatDateTimeAgo(video.datetime);
@@ -575,7 +575,7 @@ app.get('/watch', async (req, res) => {
     }
     return res.render('watch.njk', { bottomBannerAd: true, session: req.session, cookies: req.cookies, videouid: req.query.v, video: video, duration: duration });
   } catch (error) {
-    return res.status(500).render('redirect/error/500.njk', { session: req.session, cookies: req.cookies });
+    return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
   }
 });
 
@@ -657,13 +657,13 @@ app.get('/api/video/:videouid/details', (req, res) => {
 
 // TODO: Change this
 app.get('/profile/:username/:subroute', async (req, res) => {
-  if (!req.params.username) return res.status(400).render('redirect/error/400.njk', { session: req.session, cookies: req.cookies });
+  if (!req.params.username) return res.status(400).render('error/400.njk', { session: req.session, cookies: req.cookies });
   const query: [string, any[]] = req.session.authorized ?
     ['SELECT u.userid, u.accounttype, u.subs, u.displayname, u.username, u.pp, u.pb, u.pv, u.bv, CASE WHEN s.userid IS NOT NULL THEN 1 ELSE 0 END AS subbed FROM users AS u LEFT JOIN subscriptions AS s ON u.userid = s.subid AND s.userid = ? WHERE username = ?', [req.session.userid, req.params.username]] :
     ['SELECT userid, accounttype, subs, displayname, username, pp, pb, pv, bv FROM users WHERE username = ?', [req.params.username]];
   try {
     const [result] = await db.execute(query[0], query[1]);
-    if (!result) return res.status(404).render('redirect/error/404.njk', { session: req.session, cookies: req.cookies });
+    if (!result) return res.status(404).render('error/404.njk', { session: req.session, cookies: req.cookies });
     let pp = "/images/DefaultPP250p.jpg";
     let pb = "/images/DefaultPB.jpg";
     if (result.pp) {
@@ -676,8 +676,8 @@ app.get('/profile/:username/:subroute', async (req, res) => {
       const [about] = await db.execute('SELECT description FROM about WHERE userid = ?', [result.userid]);
       return res.render('profile/about.njk', { bottomBannerAd: true, session: req.session, cookies: req.cookies, accounttype: result.accounttype, displayname: result.displayname, username: result.username, pp: pp, pb: pb, desc: about.description, subs: result.subs, subbed: result.subbed });
     } else if (req.params.subroute === 'edit') {
-      if (!req.session.authorized) return res.status(401).render('redirect/error/401.njk', { session: req.session, cookies: req.cookies });
-      if (req.session.userid !== result.userid) return res.status(403).render('redirect/error/403.njk', { session: req.session, cookies: req.cookies });
+      if (!req.session.authorized) return res.status(401).render('error/401.njk', { session: req.session, cookies: req.cookies });
+      if (req.session.userid !== result.userid) return res.status(403).render('error/403.njk', { session: req.session, cookies: req.cookies });
       const [account] = await db.execute('SELECT description, name, YEAR(birthday) AS year, MONTH(birthday) AS month, DAY(birthday) FROM about WHERE userid = ?', [result.userid])
       let pv;
       let bv;
@@ -704,7 +704,7 @@ app.get('/profile/:username/:subroute', async (req, res) => {
       const videos = await db.execute(req.session.authorized && (req.session.userid === result.userid) ? `SELECT verified, views, likes, dislikes, videouid, embed, originaltitle, title, duration, thumbchanges FROM videos WHERE userid = ? AND originaltitle IS NOT NULL ORDER BY ${filter} LIMIT 40 OFFSET ${offset}` : `SELECT verified, views, likes, dislikes, videouid, embed, originaltitle, title, duration, thumbchanges FROM videos WHERE userid = ? AND verified = 1 AND visibility = 0 ORDER BY ${filter} LIMIT 40 OFFSET ${offset}`, [result.userid]);
       return res.render('profile/videos.njk', { bottomBannerAd: true, session: req.session, cookies: req.cookies, accounttype: result.accounttype, displayname: result.displayname, username: result.username, pp: pp, pb: pb, subbed: result.subbed, count: meta.count, videos: videos });
     } else if (req.params.subroute === 'gallery') {
-      if (result.accounttype < 4) return res.status(404).render('redirect/error/404.njk', { session: req.session, cookies: req.cookies });
+      if (result.accounttype < 4) return res.status(404).render('error/404.njk', { session: req.session, cookies: req.cookies });
       let imageQuery;
       let imageParams;
       let videoQuery;
@@ -785,20 +785,20 @@ app.get('/profile/:username/:subroute', async (req, res) => {
       // if (!chatCreators[req.session.username!.toLowerCase()]) return res.redirect('/chat');
       // return res.render('chat/debug.njk', { libraryid: libraryid, streamstorage: chat_streamstorage, displayname: result.displayname, username: result.username, pp: pp });
     } else {
-      return res.status(404).render('redirect/error/404.njk', { session: req.session, cookies: req.cookies });
+      return res.status(404).render('error/404.njk', { session: req.session, cookies: req.cookies });
     }
   } catch (error) {
     console.error('Profile route error: ', error);
-    return res.status(500).render('redirect/error/500.njk', { session: req.session, cookies: req.cookies });
+    return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
   }
 });
 
 // TODO: Paginate below
 app.get('/profile/:username/images', async (req, res) => {
-  if (!req.params.username) return res.status(400).render('redirect/error/400.njk', { session: req.session, cookies: req.cookies });
+  if (!req.params.username) return res.status(400).render('error/400.njk', { session: req.session, cookies: req.cookies });
   try {
     const [result] = await db.execute('SELECT userid, accounttype, displayname, username, pp, pb FROM users WHERE username = ?', [req.params.username]);
-    if (!result || result.accounttype < 4) return res.status(404).render('redirect/error/404.njk', { session: req.session, cookies: req.cookies });
+    if (!result || result.accounttype < 4) return res.status(404).render('error/404.njk', { session: req.session, cookies: req.cookies });
     let imageQuery = '';
     let imageParams = [];
     if (!req.session.authorized && result.userid !== 1) {
@@ -834,14 +834,14 @@ app.get('/profile/:username/images', async (req, res) => {
     const images = '';
     return res.render('profile/galimg.njk', {session: req.session, cookies: req.cookies, accounttype: result.accounttype, displayname: result.displayname, username: result.username, pp: result.pp ? `https://cdn.${DOMAIN}/sanctum/pp/${result.pp}.webp` : `/images/DefaultPP250p.jpg`, pb: result.pb ? `https://cdn.${DOMAIN}/sanctum/pb/${result.pb}.webp` : `/images/DefaultPB.jpg`, images: images});
   } catch (error) {
-    return res.status(500).render('redirect/error/500.njk', { session: req.session, cookies: req.cookies });
+    return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
   }
 });
 app.get('/profile/:username/videos', async (req, res) => {
-  if (!req.params.username) return res.status(400).render('redirect/error/400.njk', { session: req.session, cookies: req.cookies });
+  if (!req.params.username) return res.status(400).render('error/400.njk', { session: req.session, cookies: req.cookies });
   try {
     const [result] = await db.execute('SELECT userid, accounttype, displayname, username, pp, pb FROM users WHERE username = ?', [req.params.username]);
-    if (!result || result.accounttype < 4) return res.status(404).render('redirect/error/404.njk', { session: req.session, cookies: req.cookies });
+    if (!result || result.accounttype < 4) return res.status(404).render('error/404.njk', { session: req.session, cookies: req.cookies });
     let imageQuery = '';
     let imageParams = [];
     if (!req.session.authorized && result.userid !== 1) {
@@ -877,7 +877,7 @@ app.get('/profile/:username/videos', async (req, res) => {
     const videos = '';
     return res.render('profile/galimg.njk', {session: req.session, cookies: req.cookies, accounttype: result.accounttype, displayname: result.displayname, username: result.username, pp: result.pp ? `https://cdn.${DOMAIN}/sanctum/pp/${result.pp}.webp` : `/images/DefaultPP250p.jpg`, pb: result.pb ? `https://cdn.${DOMAIN}/sanctum/pb/${result.pb}.webp` : `/images/DefaultPB.jpg`, videos: videos});
   } catch (error) {
-    return res.status(500).render('redirect/error/500.njk', { session: req.session, cookies: req.cookies });
+    return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
   }
 });
 
@@ -951,31 +951,31 @@ app.post('/profile/:username/:subroute/:action', upload.single('image'), async (
 });
 
 app.get('/admin', (req, res) => {
-  if (!req.session.authorized) return res.status(401).render('redirect/error/401.njk', { session: req.session, cookies: req.cookies });
-  if (req.session.type! < 99) return res.status(403).render('redirect/error/403.njk', { session: req.session, cookies: req.cookies });
+  if (!req.session.authorized) return res.status(401).render('error/401.njk', { session: req.session, cookies: req.cookies });
+  if (req.session.type! < 99) return res.status(403).render('error/403.njk', { session: req.session, cookies: req.cookies });
   return res.render('admin/index.njk', { session: req.session, cookies: req.cookies });
 });
 
 // Errors
 app.get('/400', (req, res) => {
-  return res.status(400).render('redirect/error/400.njk', { session: req.session, cookies: req.cookies });
+  return res.status(400).render('error/400.njk', { session: req.session, cookies: req.cookies });
 });
 app.get('/401', (req, res) => {
-  return res.status(401).render('redirect/error/401.njk', { session: req.session, cookies: req.cookies });
+  return res.status(401).render('error/401.njk', { session: req.session, cookies: req.cookies });
 });
 app.get('/403', (req, res) => {
-  return res.status(403).render('redirect/error/403.njk', { session: req.session, cookies: req.cookies });
+  return res.status(403).render('error/403.njk', { session: req.session, cookies: req.cookies });
 });
 app.get('/404', (req, res) => {
-  return res.status(404).render('redirect/error/404.njk', { session: req.session, cookies: req.cookies });
+  return res.status(404).render('error/404.njk', { session: req.session, cookies: req.cookies });
 });
 app.get('/500', (req, res) => {
-  return res.status(500).render('redirect/error/500.njk', { session: req.session, cookies: req.cookies });
+  return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
 });
 
 // If route cannot be found
 app.get('*', (req, res) => {
-  return res.status(404).render('redirect/error/404.njk', { session: req.session, cookies: req.cookies });
+  return res.status(404).render('error/404.njk', { session: req.session, cookies: req.cookies });
 });
 
 app.listen(port, () => {
