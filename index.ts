@@ -192,6 +192,7 @@ app.get('/login/google', async (req, res) => {
     if (error instanceof URIError) {
       return res.redirect("/?loginErr=400");
     }
+    console.log(error);
     return res.redirect(`/?loginErr=500`);
   } finally {
     await connection?.release();
