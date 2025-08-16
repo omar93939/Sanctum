@@ -1,0 +1,17 @@
+{% extends "layout.njk" %}
+
+{% block head %}
+  <title>Sanctum | A Private Collection</title>
+  <link rel="stylesheet" href="/css/min/watch.css?v=1.1">
+  <link rel="canonical" href="https://sanctum.{{ DOMAIN }}/500">
+  <meta name="description" content="Oops! Looks like there was a problem with your request.">
+{% endblock %}
+
+{% block main %}
+
+  <div id="notfound-wrapper">
+    <div id="video-list-title">Service Unavailable</div>
+    <div id="video-list-desc">We're sorry, but the server is currently undergoing scheduled maintenance.</div>
+  </div>
+
+{% endblock %}

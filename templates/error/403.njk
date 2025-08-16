@@ -1,0 +1,18 @@
+{% extends "layout.njk" %}
+
+{% block head %}
+  <title>Sanctum | A Private Collection</title>
+  <link rel="stylesheet" href="/css/min/watch.css?v=1.1">
+  <link rel="canonical" href="https://sanctum.{{ DOMAIN }}/403">
+  <meta name="description" content="Oops! Looks like there was a problem with your request.">
+{% endblock %}
+
+{% block main %}
+
+  <datalist id="storage-data" data-libraryid="{{ bunnyInfo.libraryid }}" data-streamstorage="{{ bunnyInfo.streamstorage }}"></datalist>
+  <div id="notfound-wrapper">
+    <div id="video-list-title">Access Denied</div>
+    <div id="video-list-desc">We're sorry, but you can't currently access that page.<br><a href="/">Return to Home Page</a></div>
+  </div>
+
+{% endblock %}

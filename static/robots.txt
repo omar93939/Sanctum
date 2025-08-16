@@ -1,0 +1,6 @@
+User-agent: *
+#
+#
+# Profile section
+Disallow: /
+Allow: /$

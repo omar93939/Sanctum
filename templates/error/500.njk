@@ -1,0 +1,18 @@
+{% extends "layout.njk" %}
+
+{% block head %}
+  <title>Sanctum | A Private Collection</title>
+  <link rel="stylesheet" href="/css/min/watch.css?v=1.1">
+  <link rel="canonical" href="https://sanctum.{{ DOMAIN }}/500">
+  <meta name="description" content="Oops! Looks like there was a problem with your request.">
+{% endblock %}
+
+{% block main %}
+
+  <datalist id="storage-data" data-libraryid="{{ bunnyInfo.libraryid }}" data-streamstorage="{{ bunnyInfo.streamstorage }}"></datalist>
+  <div id="notfound-wrapper">
+    <div id="video-list-title">Internal server error</div>
+    <div id="video-list-desc">We're sorry, but the server encountered an issue while answering your request.<br><a href="/">Return to Home Page</a></div>
+  </div>
+
+{% endblock %}

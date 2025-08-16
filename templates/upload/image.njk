@@ -1,0 +1,254 @@
+{% extends "layout.njk" %}
+
+{% block head %}
+  <title>Upload Image | Sanctum</title>
+  <link rel="stylesheet" href="/css/min/upload.css?v=1.2">
+  <script src="/js/min/chat/upload.js?v=1.1"></script>
+{% endblock %}
+
+{% block main %}
+
+  <input id="upload-file-input" type="file" name="video" accept="image/*" oninput="uploading(this)">
+  <form id="upload-wrapper" method="POST" enctype="multipart/form-data" autocomplete="off" data-confirm="true">
+    <div id="upload-button-wrapper">
+      <div id="title-wrapper">
+        Upload Image
+        <a class="change-upload-button" href="/upload/galvideo">Upload Video</a>
+      </div>
+      <div id="draggable-area" onclick="clickUpload()">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128l-368 0zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39L296 392c0 13.3 10.7 24 24 24s24-10.7 24-24l0-134.1 39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z"/></svg>
+        <div id="drag-text">
+          Or drag and drop your image in this box.
+        </div>
+      </div>
+    </div>
+    <div id="video-template" class="no-display">
+      <div id="detail-bar">
+        <span>Image Details</span>
+        <a class="change-upload-button" href="/upload/galvideo">
+          <div id="details-upload-button">
+            Upload Video
+          </div>
+        </a>
+      </div>
+      <div id="video-content-wrapper">
+        <div class="content-block-wrapper">
+          <div id="thumbnail">
+            <div class="lds-spinner">
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+            <svg id="upload-check" class="green no-display" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/></svg>
+          </div>
+          <div id="video-progress-wrapper">
+            <div></div>
+            <div id="upload-progress-text">
+              Upload in progress, please fill out the information
+              <br>
+              and press 'Upload' below to complete the process.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="content-block-wrapper">
+        <div id="dropdown-section">
+          <div class="dropdown-wrapper">
+            <div class="dropdown-column in-front">
+              <div class="dropdown-type">
+                Title
+              </div>
+              <input type="text" id="title-input" name="title" maxlength="100">
+            </div>
+            <div class="dropdown-column"></div>
+          </div>
+          <div class="dropdown-wrapper">
+            <div class="dropdown-column">
+              <div class="dropdown-type">
+                Orientation
+              </div>
+              <div class="dropdown" onclick="toggleDropdown(this)">
+                <button type="button" class="video-dropdown-button dropdown-button">
+                  <span id="orientation" class="dropdown-set-title">Solo</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg>
+                </button>
+                <div class="dropdown-content full-length">
+                  <button type="button" class="dropdown-link dropdown-content-button top" onclick="changeValue(this)">
+                    <div class="dropdown-text">Solo</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeValue(this)">
+                    <div class="dropdown-text">Straight</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeValue(this)">
+                    <div class="dropdown-text">Gay</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeValue(this)">
+                    <div class="dropdown-text">Lesbian</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeValue(this)">
+                    <div class="dropdown-text">Transgender</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button bot" onclick="changeValue(this)">
+                    <div class="dropdown-text">Other</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="dropdown-column">
+              <div class="dropdown-type">
+                Visibility
+              </div>
+              <div class="dropdown" onclick="toggleDropdown(this)">
+                <button type="button" class="video-dropdown-button dropdown-button">
+                  <span id="visibility" class="dropdown-set-title">Public</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg>
+                </button>
+                <div class="dropdown-content full-length">
+                  <button type="button" class="dropdown-link dropdown-content-button top" onclick="changeValue(this)">
+                    <div class="dropdown-text">Public</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button bot" onclick="changeValue(this)">
+                    <div class="dropdown-text">Unlisted</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="dropdown-wrapper">
+            <div class="dropdown-column">
+              <div class="dropdown-type">
+                Event
+              </div>
+              <div class="dropdown" onclick="toggleDropdown(this)">
+                <button type="button" class="video-dropdown-button dropdown-button">
+                  <span class="dropdown-set-title">None</span>
+                  <div id="event" class="no-display">0</div>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg>
+                </button>
+                <div class="dropdown-content full-length">
+                  <button type="button" class="dropdown-link dropdown-content-button top" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">None</div>
+                    <div class="no-display">0</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">Your Birthday</div>
+                    <div class="no-display">1</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">User's Birthday</div>
+                    <div class="no-display">2</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">Valentine's Day (Feb 13 - 15)</div>
+                    <div class="no-display">3</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">Saint Patrick's (Mar 16 - 18)</div>
+                    <div class="no-display">4</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">April Fools' Day (Apr 1)</div>
+                    <div class="no-display">5</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">Earth Day (Apr 21 - 23)</div>
+                    <div class="no-display">6</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">Halloween (Oct 25 - Nov 1)</div>
+                    <div class="no-display">7</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">Dia de los Muertos (Nov 1 - 2)</div>
+                    <div class="no-display">8</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">Saint Nicholas (Dec 5 - 6)</div>
+                    <div class="no-display">9</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">Christmas (Dec 19 - 26)</div>
+                    <div class="no-display">10</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button bot" onclick="changeLanguage(this)">
+                    <div class="dropdown-text">New Year's (Dec 31 - Jan 1)</div>
+                    <div class="no-display">11</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="dropdown-column">
+              <div class="dropdown-type">
+                Verify User
+              </div>
+              <div class="dropdown" onclick="toggleDropdown(this)">
+                <button type="button" class="video-dropdown-button dropdown-button">
+                  <span id="verification" class="dropdown-set-title">Are you in this image?</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg>
+                </button>
+                <div class="dropdown-content full-length">
+                  <button type="button" class="dropdown-link dropdown-content-button top" onclick="changeValue(this)">
+                    <div class="dropdown-text">Yes</div>
+                  </button>
+                  <button type="button" class="dropdown-link dropdown-content-button bot" onclick="changeValue(this)">
+                    <div class="dropdown-text">No</div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="dropdown-wrapper">
+            <div class="dropdown-column">
+              <div class="dropdown-type">
+                Tags
+              </div>
+              <input type="text" id="tag-input" name="tag-input" maxlength="20" placeholder="Separate tags with commas">
+              <button id="submit-tag-button" type="button" onclick="addTag()">Submit</button>
+              <div id="tags-remaining">16 tags remaining, you need at least 2 tags</div>
+              <div id="tag-list"></div>
+            </div>
+          </div>
+          <div id="confirm-content-wrapper" class="dropdown-wrapper">
+            <p>By checking the boxes below, I confirm that:</p>
+            <div class="confirm-checkbox-wrapper">
+              <input type="checkbox" name="18+" class="no-display">
+              <label>
+                <svg class="confirm-checkbox active" onclick="toggleConfirm(this)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zM337 209L209 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L303 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>
+                All individuals appearing in the piece of content I am uploading consent to appear in the content, agree to for this content to be uploaded on Sanctum, and were at least 18 years of age at the time of filming the content, or the age of majority in the jurisdiction or country where the content was produced. I possess and maintain written consent of all individuals appearing in the piece of content I am uploading.
+              </label>
+            </div>
+            <div class="confirm-checkbox-wrapper">
+              <input type="checkbox" name="verified" class="no-display">
+              <label>
+                <svg class="confirm-checkbox active" onclick="toggleConfirm(this)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zM337 209L209 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L303 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>
+                I have verified, preserved and currently hold all identification cards and documents required under Record Keeping Requirements, 18 U.S.C. §2257 and 28 C.F.R. 75, or applicable laws in any other jurisdictions, countries, and territories for all individuals appearing in the content.
+              </label>
+            </div>
+            <div class="confirm-checkbox-wrapper">
+              <input type="checkbox" name="request" class="no-display">
+              <label>
+                <svg class="confirm-checkbox active" onclick="toggleConfirm(this)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zM337 209L209 337c-9.4 9.4-24.6 9.4-33.9 0l-64-64c-9.4-9.4-9.4-24.6 0-33.9s24.6-9.4 33.9 0l47 47L303 175c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9z"/></svg>
+                At any time upon request, I will promptly deliver copies of the 2257 documentation to Sanctum, or its designated agent, for the purpose of verifying compliance with the requirements of 18 U.S.C. §2257 and 28 C.F.R. 75, or applicable laws in any other jurisdictions, countries, and territories. I understand that failure to promptly do so may result in my account and/or content being removed from Sanctum.
+              </label>
+            </div>
+          </div>
+          <div id="warning-wrapper">
+            <span>WARNING:</span> Uploading (or attempting to upload) content that violates any laws or criminal laws (ex: child pornography or non-consensual content) will result in the immediate and permanent removal of your account and all of your content. Sanctum will also report you to the appropriate law enforcement authorities.
+          </div>
+          <div id="before-save-button"></div>
+          <button type="button" id="upload-video-save-button">Save</button>
+        </div>
+      </div>
+    </div>
+  </form>
+
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "profile/banner.njk" %}
+
+{% block extrahead %}
+<title>About {{ displayname or username }}</title>
+<link rel="canonical" href="https://sanctum.{{ DOMAIN }}/profile/{{ username }}/about">
+{% endblock %}
+
+{% block content %}
+
+  <div class="section">
+    <div id="description-block">
+      <div id="about-wrapper">
+        <span id="about">About {{ displayname or username }}</span>
+        <div id="subcount-wrapper">
+          <span id="subcount">{{ subs }}</span>
+          <span id="subs">subscribers</span>
+        </div>
+        <span id="description">
+          {{ desc }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
