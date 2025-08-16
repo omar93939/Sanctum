@@ -1,6 +1,5 @@
 import express from 'express';
 import nunjucks from 'nunjucks';
-import argon2 from 'argon2';
 import session from 'express-session';
 import { RedisStore } from 'connect-redis';
 import { createClient } from 'redis';
@@ -10,7 +9,6 @@ import cookieParser from 'cookie-parser';
 import axios from 'axios';
 import crypto from 'crypto';
 import cron from 'node-cron';
-import fs from 'fs';
 import { OAuth2Client } from 'google-auth-library';
 import { formatDateTimeAgo } from './util/func.js';
 import db from './util/db.js';
