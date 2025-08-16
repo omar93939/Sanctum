@@ -192,6 +192,7 @@ app.get('/login/google', async (req, res) => {
     if (error instanceof URIError) {
       return res.redirect("/?loginErr=400");
     }
+    console.error(error);
     return res.redirect(`/?loginErr=500`);
   } finally {
     await connection?.release();
@@ -213,6 +214,8 @@ app.post('/register/oauth', async (req, res) => {
     await db.execute('UPDATE users SET displayname = ? WHERE userid = ?', [req.body.displayname, req.session.userid]);
     req.session.displayname = req.body.displayname;
     req.session.authorized = true;
+    // 30 Days (30 * 24 * 60 * 60 * 1000)
+    req.session.cookie.maxAge = 2592000000;
     return res.status(200).send();
   } catch (error) {
     return res.status(500).send('Internal server error');
