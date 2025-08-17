@@ -11,10 +11,6 @@
       align-items: center;
       justify-content: center;
     }
-    h1 {
-      margin: 30px;
-      font-size: 2em;
-    }
     h2 {
       margin: 20px 0 0;
       font-size: 1.5em;
@@ -124,14 +120,11 @@
       e.preventDefault();
       const username = document.getElementById('signup-username').value;
       if (!username) {
-        document.getElementById('error').innerText = 'Displayname is required';
-        return;
+        return document.getElementById('error').innerText = 'Displayname is required';
       } else if (username.length < 1 || username.length > 40) {
-        document.getElementById('error').innerText = 'Displayname must be between 6 and 40 characters';
-        return;
+        return document.getElementById('error').innerText = 'Displayname must be between 6 and 40 characters';
       } else if (!username.match(/^[a-zA-Z0-9 ]+$/)) {
-        document.getElementById('error').innerText = 'Displayname must only contain letters, numbers and spaces';
-        return;
+        return document.getElementById('error').innerText = 'Displayname must only contain letters, numbers and spaces';
       }
       const submitButton = document.getElementById('submit-registration');
       submitButton.disabled = true;
@@ -184,10 +177,9 @@
 
 {% block main %}
 
-<form data-next="{{ next }}" id="complete-registration" autocomplete="off" onsubmit="event.preventDefault()">
-  <h1>Complete Registration</h1>
+<form id="complete-registration" autocomplete="off" onsubmit="event.preventDefault()">
   <h2>Choose a Displayname</h2>
-  <h3>Displayname does NOT need to be unique.</h3>
+  <h3>Displayname does NOT need to be unique</h3>
   <input id="signup-username" class="signup-field" type="text" placeholder="Displayname (required)" autocomplete="off" value="{{ name }}">
   {% if picture %}
     <h2>Profile Picture (optional)</h2>
