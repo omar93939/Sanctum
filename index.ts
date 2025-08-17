@@ -166,13 +166,12 @@ app.get('/upload/:type', async (req, res) => {
 
 app.post('/upload/image', upload.single('image'), async (req, res) => {
   if (!req.session.authorized) return res.status(401).send('Unauthorized');
-  if (req.body.title && (typeof req.body.title !== 'string' || req.body.title.length > 100)) return res.status(400).send('Bad request');
+  if (req.body.title && (typeof req.body.title !== 'string' || req.body.title.length > 100)) return res.status(400).send('Title error.');
   let tagString = '';
-  if (req.body.tags && (!Array.isArray(req.body.tags) || req.body.tags.length > 16)) return res.status(400).send('Bad request');
   if (req.body.tags) {
-    if (!Array.isArray(req.body.tags) || req.body.tags.length > 16) return res.status(400).send('Bad request');
+    if (!Array.isArray(req.body.tags) || req.body.tags.length > 16) return res.status(400).send('Too many tags.');
     tagString = req.body.tags.join(' ');
-    if (tagString.length > 335) return res.status(400).send('Bad request');
+    if (tagString.length > 335) return res.status(400).send('At least 1 tag is too long.');
   }
   let connection;
   try {
@@ -208,7 +207,6 @@ app.post('/upload/image', upload.single('image'), async (req, res) => {
         await connection.commit();
         return res.redirect(`/dashboard/sanctum`);
       } catch (error) {
-        console.error(error);
         await connection.rollback();
         return res.status(400).send('Bad request');
       }
