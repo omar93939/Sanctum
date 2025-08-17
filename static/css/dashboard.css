@@ -1,0 +1,10 @@
+#index-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1000px) {
+  #index-wrapper {
+    flex-direction: row;
+  }
+}
