@@ -218,6 +218,7 @@ app.post('/upload/image', upload.single('image'), async (req, res) => {
     }
   } catch (error) {
     await connection?.rollback();
+    console.error(error);
     return res.status(500).send('Internal server error.');
   } finally {
     await connection?.release();
