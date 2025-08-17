@@ -361,12 +361,7 @@ function saveInfo() {
       }
     }
   }
-  if (title === "") {
-    allGood = false;
-    if (!Array.from(beforeSave.children).some(div => div.innerHTML === "Please Enter a title!")) {
-      beforeSave.innerHTML += `<div>Please Enter a title!</div>`;
-    }
-  } else if (title.length < 5) {
+  if (title.length > 0 && title.length < 5) {
     allGood = false;
     const index = Array.from(beforeSave.children).findIndex(div => div.innerHTML === "Please Enter a title!");
     if (index > -1) {
@@ -375,7 +370,7 @@ function saveInfo() {
     if (!Array.from(beforeSave.children).some(div => div.innerHTML === "Title must contain at least 5 characters!")) {
       beforeSave.innerHTML += `<div>Title must contain at least 5 characters!</div>`;
     }
-  } else if (title.length > 100) {
+  } else if (title.length > 0 && title.length > 100) {
     alert("Error with title.");
     return;
   } else {

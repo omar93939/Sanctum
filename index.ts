@@ -166,11 +166,14 @@ app.get('/upload/:type', async (req, res) => {
 
 app.post('/upload/image', upload.single('image'), async (req, res) => {
   if (!req.session.authorized) return res.status(401).send('Unauthorized');
-  if (!req.body.title || !req.body.tags) return res.status(400).send('Bad request');
-  if (req.body.title.length < 5 || req.body.title.length > 100) return res.status(400).send('Bad request');
-  if (!Array.isArray(req.body.tags) || req.body.tags.length > 16) return res.status(400).send('Bad request');
-  const tagString = req.body.tags.join(' ');
-  if (tagString.length > 335) return res.status(400).send('Bad request');
+  if (req.body.title && (typeof req.body.title !== 'string' || req.body.title.length > 100)) return res.status(400).send('Bad request');
+  let tagString = '';
+  if (req.body.tags && (!Array.isArray(req.body.tags) || req.body.tags.length > 16)) return res.status(400).send('Bad request');
+  if (req.body.tags) {
+    if (!Array.isArray(req.body.tags) || req.body.tags.length > 16) return res.status(400).send('Bad request');
+    tagString = req.body.tags.join(' ');
+    if (tagString.length > 335) return res.status(400).send('Bad request');
+  }
   let connection;
   try {
     connection = await db.getConnection();
@@ -185,8 +188,12 @@ app.post('/upload/image', upload.single('image'), async (req, res) => {
       req.body.id = media.MediaID
       await bunnyStorage.upload(imageBuffer, `images/${media.MediaID}.webp`);
     }
-    if (!req.body.id || typeof req.body.id !== 'string' || !UUID_PATTERN.test(req.body.id)) return res.status(400).send('Bad request');
-    if (tagString.length) {
+    if (!req.body.id || typeof req.body.id !== 'string' || !UUID_PATTERN.test(req.body.id)) {
+      await connection.rollback();
+      return res.status(400).send('Bad request');
+    }
+    await connection.execute('DELETE FROM mediatags WHERE MediaID = ?', [req.body.id]);
+    if (tagString) {
       try {
         const tagValues = req.body.tags.map((tag: string) => {
           if (tag.length < 2 || tag.length > 20) {
@@ -194,9 +201,8 @@ app.post('/upload/image', upload.single('image'), async (req, res) => {
           }
           return [req.body.id, tag.trim().replace(/\s+/g, ' ').toLowerCase()];
         });
-        await connection.execute('DELETE FROM mediatags WHERE MediaID = ?', [req.body.id]);
         await Promise.all([
-          connection.execute('UPDATE media SET Title = ?, Tags = ? WHERE MediaID = ? AND UserID = ?', [req.body.title, tagString, req.body.id, req.session.userid]),
+          connection.execute('UPDATE media SET Title = ?, Tags = ? WHERE MediaID = ? AND UserID = ?', [req.body.title || '', tagString, req.body.id, req.session.userid]),
           connection.batch('INSERT INTO mediatags (MediaID, Tag) VALUES (?, ?)', tagValues)
         ]);
         await connection.commit();
