@@ -2,8 +2,8 @@
 
 {% block head %}
   <title>Upload Video | Sanctum</title>
-  <link rel="stylesheet" href="/css/min/upload.css?v=1.4">
-  <script src="/js/min/chat/upload.js?v=1.1"></script>
+  <link rel="stylesheet" href="/css/upload.css?v=1.4">
+  <script src="/js/upload.js?v=1.1"></script>
   <script src="/js/min/util/tus.js?v=1.2"></script>
 {% endblock %}
 
@@ -18,9 +18,6 @@
       </div>
       <div id="draggable-area" onclick="clickUpload()">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M144 480C64.5 480 0 415.5 0 336c0-62.8 40.2-116.2 96.2-135.9c-.1-2.7-.2-5.4-.2-8.1c0-88.4 71.6-160 160-160c59.3 0 111 32.2 138.7 80.2C409.9 102 428.3 96 448 96c53 0 96 43 96 96c0 12.2-2.3 23.8-6.4 34.6C596 238.4 640 290.1 640 352c0 70.7-57.3 128-128 128l-368 0zm79-217c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l39-39L296 392c0 13.3 10.7 24 24 24s24-10.7 24-24l0-134.1 39 39c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-80-80c-9.4-9.4-24.6-9.4-33.9 0l-80 80z"/></svg>
-        <div id="drag-text">
-          Or drag and drop your video in this box.
-        </div>
       </div>
     </div>
     <div id="video-template" class="no-display">
@@ -74,141 +71,6 @@
               <input type="text" id="title-input" name="title" maxlength="100">
             </div>
             <div class="dropdown-column"></div>
-          </div>
-          <div class="dropdown-wrapper">
-            <div class="dropdown-column">
-              <div class="dropdown-type">
-                Orientation
-              </div>
-              <div class="dropdown" onclick="toggleDropdown(this)">
-                <button type="button" class="video-dropdown-button dropdown-button">
-                  <span id="orientation" class="dropdown-set-title">Solo</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg>
-                </button>
-                <div class="dropdown-content full-length">
-                  <button type="button" class="dropdown-link dropdown-content-button top" onclick="changeValue(this)">
-                    <div class="dropdown-text">Solo</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeValue(this)">
-                    <div class="dropdown-text">Straight</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeValue(this)">
-                    <div class="dropdown-text">Gay</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeValue(this)">
-                    <div class="dropdown-text">Lesbian</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeValue(this)">
-                    <div class="dropdown-text">Transgender</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button bot" onclick="changeValue(this)">
-                    <div class="dropdown-text">Other</div>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="dropdown-column">
-              <div class="dropdown-type">
-                Visibility
-              </div>
-              <div class="dropdown" onclick="toggleDropdown(this)">
-                <button type="button" class="video-dropdown-button dropdown-button">
-                  <span id="visibility" class="dropdown-set-title">Public</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg>
-                </button>
-                <div class="dropdown-content full-length">
-                  <button type="button" class="dropdown-link dropdown-content-button top" onclick="changeValue(this)">
-                    <div class="dropdown-text">Public</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button bot" onclick="changeValue(this)">
-                    <div class="dropdown-text">Unlisted</div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="dropdown-wrapper">
-            <div class="dropdown-column">
-              <div class="dropdown-type">
-                Event
-              </div>
-              <div class="dropdown" onclick="toggleDropdown(this)">
-                <button type="button" class="video-dropdown-button dropdown-button">
-                  <span class="dropdown-set-title">None</span>
-                  <div id="event" class="no-display">0</div>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg>
-                </button>
-                <div class="dropdown-content full-length">
-                  <button type="button" class="dropdown-link dropdown-content-button top" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">None</div>
-                    <div class="no-display">0</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">Your Birthday</div>
-                    <div class="no-display">1</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">User's Birthday</div>
-                    <div class="no-display">2</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">Valentine's Day (Feb 13 - 15)</div>
-                    <div class="no-display">3</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">Saint Patrick's (Mar 16 - 18)</div>
-                    <div class="no-display">4</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">April Fools' Day (Apr 1)</div>
-                    <div class="no-display">5</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">Earth Day (Apr 21 - 23)</div>
-                    <div class="no-display">6</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">Halloween (Oct 25 - Nov 1)</div>
-                    <div class="no-display">7</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">Dia de los Muertos (Nov 1 - 2)</div>
-                    <div class="no-display">8</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">Saint Nicholas (Dec 5 - 6)</div>
-                    <div class="no-display">9</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">Christmas (Dec 19 - 26)</div>
-                    <div class="no-display">10</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button bot" onclick="changeLanguage(this)">
-                    <div class="dropdown-text">New Year's (Dec 31 - Jan 1)</div>
-                    <div class="no-display">11</div>
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="dropdown-column">
-              <div class="dropdown-type">
-                Verify User
-              </div>
-              <div class="dropdown" onclick="toggleDropdown(this)">
-                <button type="button" class="video-dropdown-button dropdown-button">
-                  <span id="verification" class="dropdown-set-title">Are you in this video?</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--!Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/></svg>
-                </button>
-                <div class="dropdown-content full-length">
-                  <button type="button" class="dropdown-link dropdown-content-button top" onclick="changeValue(this)">
-                    <div class="dropdown-text">Yes</div>
-                  </button>
-                  <button type="button" class="dropdown-link dropdown-content-button bot" onclick="changeValue(this)">
-                    <div class="dropdown-text">No</div>
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
           <div class="dropdown-wrapper">
             <div class="dropdown-column">
