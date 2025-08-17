@@ -188,6 +188,7 @@ app.post('/upload/image', upload.single('image'), async (req, res) => {
       await bunnyStorage.upload(imageBuffer, `images/${media.MediaID}.webp`);
     }
     if (!req.body.id || typeof req.body.id !== 'string' || !UUID_PATTERN.test(req.body.id)) {
+      console.log(req.body.id);
       await connection.rollback();
       return res.status(400).send('Bad request');
     }
