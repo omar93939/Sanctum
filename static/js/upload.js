@@ -414,10 +414,10 @@ function saveInfo() {
   if (allGood) {
     if (fileType === "image") {
       const data = new FormData();
-      data.append('title', title);
-      data.append('tags', tags);
-      data.append('image', imgFile);
       data.append('id', videoID);
+      data.append('image', imgFile);
+      data.append('title', title);
+      data.append('tags', JSON.stringify(tags));
       fetch('/upload/image', {
         method: 'POST',
         body: data

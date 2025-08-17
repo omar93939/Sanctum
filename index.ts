@@ -169,6 +169,7 @@ app.post('/upload/image', upload.single('image'), async (req, res) => {
   if (req.body.title && (typeof req.body.title !== 'string' || req.body.title.length > 100)) return res.status(400).send('Title error.');
   let tagString = '';
   if (req.body.tags) {
+    req.body.tags = JSON.parse(req.body.tags);
     if (!Array.isArray(req.body.tags) || req.body.tags.length > 16) return res.status(400).send('Too many tags.');
     tagString = req.body.tags.join(' ');
     if (tagString.length > 335) return res.status(400).send('At least 1 tag is too long.');
@@ -188,7 +189,6 @@ app.post('/upload/image', upload.single('image'), async (req, res) => {
       await bunnyStorage.upload(imageBuffer, `images/${media.MediaID}.webp`);
     }
     if (!req.body.id || typeof req.body.id !== 'string' || !UUID_PATTERN.test(req.body.id)) {
-      console.log(req.body.id);
       await connection.rollback();
       return res.status(400).send('Bad request');
     }
@@ -212,7 +212,7 @@ app.post('/upload/image', upload.single('image'), async (req, res) => {
         return res.status(400).send('Bad request');
       }
     } else {
-      await connection.execute('UPDATE media SET Title = ?, Tags = ? WHERE MediaID = ? AND UserID = ?', [req.body.title, tagString, req.body.id, req.session.userid]);
+      await connection.execute('UPDATE media SET Title = ?, Tags = ? WHERE MediaID = ? AND UserID = ?', [req.body.title || '', tagString, req.body.id, req.session.userid]);
       await connection.commit();
       return res.redirect(`/dashboard/sanctum`);
     }
