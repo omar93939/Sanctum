@@ -224,6 +224,8 @@ app.post('/upload/image', upload.single('image'), async (req, res) => {
   }
 });
 
+// TODO: Video Upload.
+
 app.get('/login/google', async (req, res) => {
   if (typeof req.query.code !== 'string') return res.redirect(`/?loginErr=400`);
   let connection;

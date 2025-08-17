@@ -97,41 +97,6 @@ a:hover {
     text-decoration: underline;
 }
 
-.preview-progress-bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 4px;
-    width: 0;
-    background-color: #7850a8;
-    z-index: 10;
-}
-
-.recommended-video-thumbnail-wrapper .preview-progress-bar {
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-}
-
-.recommended-video-thumbnail-wrapper:hover .preview-progress-bar, .video-thumbnail:hover .preview-progress-bar {
-    width: 100%;
-    animation: slide-and-fade 0.5s linear forwards;
-}
-
-@keyframes slide-and-fade {
-    0% {
-        width: 0%;
-        opacity: 1;
-    }
-    99% {
-        width: 100%;
-        opacity: 1;
-    }
-    100% {
-        width: 100%;
-        opacity: 0;
-    }
-}
-
 .dropdown-content {
     position: absolute;
     background-color: var(--dropdown-color);

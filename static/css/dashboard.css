@@ -69,3 +69,104 @@
 #upload-section a svg {
   font-size: 5rem;
 }
+
+#media-list {
+  margin-top: 20px;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  grid-template: repeat(4, 1fr) auto;
+  row-gap: 15px;
+  column-gap: 10px;
+  padding: 20px 10px;
+  list-style: none;
+  width: 100%;
+}
+
+#media-list li {
+  text-align: left;
+  width: 100%;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.media-thumbnail-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.preview-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 4px;
+  width: 0;
+  background-color: #7850a8;
+  z-index: 10;
+}
+
+.media-thumbnail-wrapper .preview-progress-bar {
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+
+.media-thumbnail-wrapper:hover .preview-progress-bar {
+  width: 100%;
+  animation: slide-and-fade 0.5s linear forwards;
+}
+
+@keyframes slide-and-fade {
+  0% {
+    width: 0%;
+    opacity: 1;
+  }
+  99% {
+    width: 100%;
+    opacity: 1;
+  }
+  100% {
+    width: 100%;
+    opacity: 0;
+  }
+}
+
+.media-thumbnail-wrapper a {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  height: 0;
+  padding-bottom: 56.25%;
+}
+
+.media-thumbnail {
+  background-color: #252526;
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  object-fit: cover;
+  border-radius: 5px;
+}
+
+.media-duration {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding-right: 4px;
+  padding-bottom: 6px;
+  color: #fff;
+  z-index: 10;
+  overflow: hidden;
+  cursor: default;
+  pointer-events: none;
+}
+
+.media-duration var {
+  font-size: 14px;
+  margin-top: 3px;
+  float: right;
+  padding: 0 5px;
+  background: rgba(27,27,27,.75);
+  border-radius: 4px;
+}
