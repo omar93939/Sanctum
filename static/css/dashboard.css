@@ -25,6 +25,10 @@
   padding: 1rem 4rem;
 }
 
+#index-wrapper button:hover {
+  cursor: pointer;
+}
+
 #index-wrapper button svg {
   font-size: 10rem;
 }
