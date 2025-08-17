@@ -110,13 +110,43 @@ app.use((req, res, next) => {
 
 import mailer from './util/mailer.js';
 
-app.get('/', (req, res) => {
-  if (!req.session.authorized) return res.render('login.njk');
-  // TODO
-  return res.render('index.njk', { session: req.session, cookies: req.cookies });
-});
+if (NODE_ENV === 'development') {
+  app.get('/', async (req, res) => {
+    // Development setup
+    try {
+      const [user] = await db.execute('SELECT userid, displayname, accounttype FROM users WHERE displayname = ?', ['Sanctum']);
+      if (!user) return res.status(404).render('error/404.njk', { session: req.session, cookies: req.cookies });
+      req.session.userid = user.userid;
+      req.session.displayname = user.displayname;
+      req.session.type = user.accounttype;
+      req.session.authorized = true;
 
-// TODO: Whitelist using db
+      const [role] = await db.execute('SELECT EXISTS(SELECT 1 FROM sanctum_keys WHERE KeyholderID = ?) AS isKeyholder, EXISTS(SELECT 1 FROM sanctum_keys WHERE SanctumOwnerID = ?) AS isSanctumOwner', [req.session.userid, req.session.userid]);
+      if (!role) return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
+      if (role.isSanctumOwner && role.isKeyholder) return res.redirect('/dashboard');
+      if (role.isSanctumOwner) return res.redirect('/dashboard/sanctum');
+      if (role.isKeyholder) return res.redirect('/dashboard/keyholder');
+      return res.status(403).render('error/403.njk', { session: req.session, cookies: req.cookies });
+    } catch (error) {
+      return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
+    }
+  });
+} else {
+  app.get('/', async (req, res) => {
+    if (!req.session.authorized) return res.render('login.njk');
+    try {
+      const [role] = await db.execute('SELECT EXISTS(SELECT 1 FROM sanctum_keys WHERE KeyholderID = ?) AS isKeyholder, EXISTS(SELECT 1 FROM sanctum_keys WHERE SanctumOwnerID = ?) AS isSanctumOwner', [req.session.userid, req.session.userid]);
+      if (!role) return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
+      if (role.isSanctumOwner && role.isKeyholder) return res.redirect('/dashboard');
+      if (role.isSanctumOwner) return res.redirect('/dashboard/sanctum');
+      if (role.isKeyholder) return res.redirect('/dashboard/keyholder');
+      return res.status(403).render('error/403.njk', { session: req.session, cookies: req.cookies });
+    } catch (error) {
+      return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
+    }
+  });
+}
+
 app.get('/login/google', async (req, res) => {
   if (typeof req.query.code !== 'string') return res.redirect(`/?loginErr=400`);
   let connection;
@@ -155,6 +185,7 @@ app.get('/login/google', async (req, res) => {
         await connection.execute('UPDATE users SET lastlogin = CURDATE() WHERE userid = ? LIMIT 1', [user.userid]);
       }
     } else {
+      // TODO: Accept invite if invited (add to sanctum_keys table)
       // GoogleID not found in Database - User was invited but this is their first login
       await connection.execute('UPDATE users SET googleid = ?, accounttype = ?, lastlogin = CURDATE() WHERE userid = ? LIMIT 1', [googleID, 1, user.userid]);
       mailer.sendGoogleAccountRegistrationEmail(payload.email!, payload.given_name).catch(err => {
