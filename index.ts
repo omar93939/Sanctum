@@ -208,7 +208,6 @@ app.post('/register/oauth', async (req, res) => {
   if (!req.body.displayname || typeof req.body.displayname !== 'string') return res.status(400).send('Displayname format error');
   if (req.body.displayname.length < 1 || req.body.displayname.length > 40) return res.status(400).send('Displayname must be between 6 and 18 characters long');
   if (!req.body.displayname.match(/^[a-zA-Z0-9 ]+$/)) return res.status(400).send('Displayname must be alphanumeric');
-  console.log('REGISTER');
   try {
     await db.execute('UPDATE users SET displayname = ? WHERE userid = ?', [req.body.displayname, req.session.userid]);
     req.session.displayname = req.body.displayname;
@@ -223,7 +222,6 @@ app.post('/register/oauth', async (req, res) => {
 app.put('/register/oauth', upload.single('img'), async (req, res) => {
   if (!req.session.authorized) return res.status(401).send('Unauthorized');
   if (!req.file) return res.status(400).send('No file uploaded');
-  console.log('FILE');
   let connection;
   try {
     const data = await sharp(req.file.buffer).resize(400, 400, { withoutEnlargement: true }).webp({quality: 90}).toBuffer();
