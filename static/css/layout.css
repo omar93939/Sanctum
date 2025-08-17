@@ -42,6 +42,7 @@ main {
     display: flex;
     flex-direction: column;
     text-align: center;
+    justify-content: center;
 }
 
 body.sfw img:not(#header-logo img), body.sfw .exo-native-widget-outer-container, body.sfw iframe, body.sfw video {
