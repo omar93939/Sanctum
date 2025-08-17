@@ -35,7 +35,7 @@ const mailer = {
       </tr></table></td></tr></table></td></tr></table></td></tr></table></td></tr></table></div></body></html>
     `;
     const message = {
-      from: `Sanctum Mail <mail@${DOMAIN}>`,
+      from: `Sanctum <mail@${DOMAIN}>`,
       to: `${recipientEmail}`,
       subject: `Welcome to Sanctum, ${recipientUsername}!`,
       html: emailContent
@@ -58,7 +58,7 @@ const mailer = {
       </tr></table></td></tr></table></td></tr></table></td></tr></table></td></tr></table></div></body></html>
     `;
     const message = {
-      from: `Sanctum Mail <mail@${DOMAIN}>`,
+      from: `Sanctum <mail@${DOMAIN}>`,
       to: `${recipientEmail}`,
       subject: `Welcome back, ${recipientUsername}!`,
       html: emailContent
@@ -79,7 +79,7 @@ const mailer = {
         </tr></table></td></tr></table></td></tr></table></td></tr></table></td></tr></table></div></body></html>
       `;
       const message = {
-        from: `Sanctum Mail <mail@${DOMAIN}>`,
+        from: `Sanctum <mail@${DOMAIN}>`,
         to: `${recipientEmail}`,
         subject: `Welcome to Sanctum, ${recipientUsername}!`,
         html: emailContent
@@ -97,7 +97,7 @@ const mailer = {
         </tr></table></td></tr></table></td></tr></table></td></tr></table></td></tr></table></div></body></html>
       `;
       const message = {
-        from: `Sanctum Mail <mail@${DOMAIN}>`,
+        from: `Sanctum <mail@${DOMAIN}>`,
         to: `${recipientEmail}`,
         subject: `Welcome to Sanctum!`,
         html: emailContent
@@ -118,7 +118,7 @@ const mailer = {
       </tr></table></td></tr></table></td></tr></table></td></tr></table></td></tr></table></div></body></html>
     `;
     const message = {
-      from: `Sanctum Mail <mail@${DOMAIN}>`,
+      from: `Sanctum <mail@${DOMAIN}>`,
       to: `${recipientEmail}`,
       subject: `Welcome back, ${recipientUsername}!`,
       html: emailContent
