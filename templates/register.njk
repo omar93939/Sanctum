@@ -140,7 +140,6 @@
         body: JSON.stringify(data)
       }).then((res) => {
         if (res.status === 200) {
-          const next = document.getElementById('complete-registration').dataset.next;
           if (picture) {
             const img = new FormData();
             img.append('img', picture);
@@ -149,17 +148,17 @@
               body: img
             }).then((result) => {
               if (result.status === 200) {
-                location.href = next || '/';
+                location.href = '/';
               } else {
                 alert('Profile picture upload failed but registration was successful. To upload a profile picture, go to your profile settings');
-                location.href = next || '/';
+                location.href = '/';
               }
             }).catch(err => {
               alert('Profile picture upload failed but registration was successful. To upload a profile picture, go to your profile settings');
-              location.href = next || '/';
+              location.href = '/';
             });
           } else {
-            location.href = next || '/';
+            location.href = '/';
           }
         } else {
           document.getElementById('error').innerText = 'Error completing registration, please try again';
