@@ -138,6 +138,14 @@ app.get('/dashboard', (req, res) => {
   return res.render('dashboard/index.njk', { session: req.session, cookies: req.cookies });
 });
 
+app.get('/dashboard/sanctum', async (req, res) => {
+  if (!req.session.authorized) return res.redirect('/');
+  const [role] = await db.execute('SELECT EXISTS(SELECT 1 FROM sanctum_keys WHERE SanctumOwnerID = ?) AS isSanctumOwner', [req.session.userid]);
+  if (!role) return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
+  if (!role.isSanctumOwner) return res.redirect('/');
+  return res.render('dashboard/sanctum.njk');
+});
+
 app.get('/login/google', async (req, res) => {
   if (typeof req.query.code !== 'string') return res.redirect(`/?loginErr=400`);
   let connection;
