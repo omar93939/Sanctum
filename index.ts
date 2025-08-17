@@ -133,9 +133,9 @@ app.get('/', async (req, res) => {
   }
 });
 
-app.get('/dashboard', async (req, res) => {
+app.get('/dashboard', (req, res) => {
   if (!req.session.authorized) return res.redirect('/');
-  return res.render('/dashboard/index.njk', { session: req.session, cookies: req.cookies });
+  return res.render('dashboard/index.njk', { session: req.session, cookies: req.cookies });
 });
 
 app.get('/login/google', async (req, res) => {
