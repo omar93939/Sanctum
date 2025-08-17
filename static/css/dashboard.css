@@ -10,3 +10,11 @@
     flex-direction: row;
   }
 }
+
+#index-wrapper button {
+  background-color: #252526;
+}
+
+#index-wrapper button svg {
+  font-size: 10rem;
+}
