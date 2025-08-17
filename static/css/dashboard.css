@@ -3,7 +3,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 1rem;
 }
 
 @media (min-width: 1000px) {
@@ -30,10 +30,10 @@
 }
 
 #index-wrapper h2 {
-  margin-bottom: 0;
+  margin: .5rem 0 0;
 }
 
 #index-wrapper p {
-  margin: 0;
+  margin-bottom: .5rem;
   color: #ababb3;
 }
