@@ -146,6 +146,12 @@ app.get('/dashboard/sanctum', async (req, res) => {
   return res.render('dashboard/sanctum.njk');
 });
 
+app.post('/dashboard', async (req, res) => {
+  if (!req.session.authorized) return res.status(401).send('Unauthorized');
+  const media = await db.execute('SELECT MediaID, MediaType, Duration, Title, ThumbChanges ORDER BY DateTime desc LIMIT 64');
+  return res.status(200).send(media);
+});
+
 app.get('/upload', (req, res) => {
   return res.redirect('/');
 });
