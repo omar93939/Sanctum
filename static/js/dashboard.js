@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
         thumbnail.dataset.caption = media.Title;
         const thumbnailImg = thumbnail.firstElementChild;
         if (media.MediaType === 'image') {
-          thumbnail.href = `sanctum.b-cdn.net/images/${media.MediaID}.webp`;
-          thumbnailImg.src = `sanctum.b-cdn.net/images/${media.MediaID}.webp`;
+          thumbnail.href = `https://sanctum.b-cdn.net/images/${media.MediaID}.webp`;
+          thumbnailImg.src = `https://sanctum.b-cdn.net/images/${media.MediaID}.webp`;
         } else if (media.MediaType === 'video') {
           thumbnail.href = `https://iframe.mediadelivery.net/embed/${STREAM_ID}/${media.MediaID}?autoplay=false`;
           thumbnail.dataset.type = 'iframe';
