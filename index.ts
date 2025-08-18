@@ -21,7 +21,7 @@ const STREAM_APIKEY = process.env.SANCTUM_STREAM_APIKEY;
 const STREAM_ID = process.env.SANCTUM_STREAM_ID;
 const STREAM_HOSTNAME = process.env.SANCTUM_STREAM_HOSTNAME;
 
-export const NODE_ENV = process.env.NODE_ENV;
+const NODE_ENV = process.env.NODE_ENV;
 
 const googleAuthClient = new OAuth2Client(clientInfo.google.id, clientInfo.google.secret, `https://sanctum.${DOMAIN}/login/google`);
 
@@ -36,7 +36,7 @@ const upload = multer({
   }
 });
 
-const base64UUID = () => {
+function base64UUID() {
   return crypto.randomBytes(24).toString('base64url');
 }
 

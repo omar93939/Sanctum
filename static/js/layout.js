@@ -4,7 +4,6 @@ const params = new URLSearchParams(url.search);
 document.addEventListener("DOMContentLoaded", () => {
   
   const loginErr = params.get('loginErr');
-  const registrationErr = params.get('registrationErr');
   if (loginErr) {
     let msg = '';
     if (loginErr === '500') {
@@ -14,23 +13,13 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (loginErr === '409') {
       msg = 'Conflict. Our servers noticed that you are logging in with an email which already belongs to another email verified user.'
     }
-    signBox('signin', {
-      type: 'login',
-      msg: msg
-    });
-  } else if (registrationErr) {
-    let msg = '';
-    if (registrationErr === '500') {
-      msg = 'Internal server error. Please try again.';
+    console.error(msg);
+    const signinButton = document.getElementById('signin-button');
+    if (signinButton) {
+      signinButton.classList.add('invalid');
     }
-    signBox('signup', {
-      type: 'registration',
-      msg: msg
-    });
   }
-
   previewImages();
-
 });
 
 const previewImages = () => {
@@ -47,14 +36,14 @@ const previewImages = () => {
 
 document.onclick = (event) => {
   if (!event.target.closest('.dropdown-button')) {
-      const dropdowns = document.getElementsByClassName('dropdown');
-      for (let i = 0; i < dropdowns.length; i++) {
-          const dropChildren = dropdowns[i].children;
-          if (dropChildren[1].classList.contains('show')) {
-              dropChildren[1].classList.remove('show');
-              dropChildren[0].blur();
-          }
+    const dropdowns = document.getElementsByClassName('dropdown');
+    for (let i = 0; i < dropdowns.length; i++) {
+      const dropChildren = dropdowns[i].children;
+      if (dropChildren[1].classList.contains('show')) {
+        dropChildren[1].classList.remove('show');
+        dropChildren[0].blur();
       }
+    }
   }
 }
 
