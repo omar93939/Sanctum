@@ -73,6 +73,7 @@ const env = nunjucks.configure('templates', {
 
 env.addGlobal('DOMAIN', DOMAIN);
 env.addGlobal('STREAM_HOSTNAME', STREAM_HOSTNAME);
+env.addGlobal('STREAM_ID', STREAM_ID);
 
 declare module 'express-session' {
   export interface SessionData {
