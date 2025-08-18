@@ -143,7 +143,7 @@ app.get('/dashboard/sanctum', async (req, res) => {
   const [role] = await db.execute('SELECT EXISTS(SELECT 1 FROM sanctum_keys WHERE SanctumOwnerID = ?) AS isSanctumOwner', [req.session.userid]);
   if (!role) return res.status(500).render('error/500.njk', { session: req.session, cookies: req.cookies });
   if (!role.isSanctumOwner) return res.redirect('/');
-  return res.render('dashboard/sanctum.njk');
+  return res.render('dashboard/sanctum.njk', { session: req.session, cookies: req.cookies });
 });
 
 app.post('/dashboard/:UserID', async (req, res) => {
