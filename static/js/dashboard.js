@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         thumbnailImg.alt = media.Title;
         thumbnailImg.onerror = () => {
+          delete thumbnailImg.dataset.fancybox;
           thumbnailImg.onerror = null;
           thumbnailImg.src = '/images/Processing.png';
           thumbnailImg.dataset.preview = '/images/Processing.png';

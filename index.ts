@@ -154,7 +154,7 @@ app.post('/dashboard/:UserID', async (req, res) => {
     if (!role.isKeyholder) return res.status(403).send('Forbidden');
   }
   try {
-    const media = await db.execute('SELECT MediaID, MediaType, Duration, Title, ThumbChanges FROM media WHERE userid = ? ORDER BY DateTime desc LIMIT 64', [req.params.UserID]);
+    const media = await db.execute('SELECT MediaID, MediaType, Duration, Title, ThumbChanges FROM media WHERE UserID = ? ORDER BY DateTime DESC LIMIT 64', [req.params.UserID]);
     return res.status(200).send(media);
   } catch (error) {
     return res.status(500).send('Internal server error.');
