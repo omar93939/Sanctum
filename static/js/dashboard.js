@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  fetch(`/dashboard`, {
+  fetch(`/dashboard/${window.UserID}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'

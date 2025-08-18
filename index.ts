@@ -146,10 +146,19 @@ app.get('/dashboard/sanctum', async (req, res) => {
   return res.render('dashboard/sanctum.njk');
 });
 
-app.post('/dashboard', async (req, res) => {
+app.post('/dashboard/:UserID', async (req, res) => {
   if (!req.session.authorized) return res.status(401).send('Unauthorized');
-  const media = await db.execute('SELECT MediaID, MediaType, Duration, Title, ThumbChanges ORDER BY DateTime desc LIMIT 64');
-  return res.status(200).send(media);
+  if (req.session.userid !== req.params.UserID) {
+    const [role] = await db.execute('SELECT EXISTS(SELECT 1 FROM sanctum_keys WHERE KeyholderID = ? AND SanctumOwnerID = ?) AS isKeyholder', [req.session.userid, req.params.UserID]);
+    if (!role) return res.status(500).send('Internal server error.');
+    if (!role.isKeyholder) return res.status(403).send('Forbidden');
+  }
+  try {
+    const media = await db.execute('SELECT MediaID, MediaType, Duration, Title, ThumbChanges FROM media WHERE userid = ? ORDER BY DateTime desc LIMIT 64', [req.params.UserID]);
+    return res.status(200).send(media);
+  } catch (error) {
+    return res.status(500).send('Internal server error.');
+  }
 });
 
 app.get('/upload', (req, res) => {
