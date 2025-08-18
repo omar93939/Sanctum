@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const mediaList = document.getElementById('media-list');
   fetch(`/dashboard/${window.UserID}`, {
     method: 'POST',
     headers: {
